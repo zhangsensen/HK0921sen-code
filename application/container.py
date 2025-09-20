@@ -127,6 +127,7 @@ class ServiceContainer:
         return CombinerType(
             self.settings.symbol,
             phase1_results,
+            config=self.settings.combiner_config,
             data_loader=self.data_loader(),
         )
 

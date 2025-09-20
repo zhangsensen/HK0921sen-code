@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from config import CombinerConfig
 from utils.validation import validate_symbol
 
 
@@ -24,6 +25,7 @@ class AppSettings:
     parallel_mode: str = "off"
     max_workers: Optional[int] = None
     memory_limit_mb: Optional[int] = None
+    combiner_config: CombinerConfig = field(default_factory=CombinerConfig)
 
     @classmethod
     def from_cli_args(cls, args: object) -> "AppSettings":
@@ -49,6 +51,16 @@ class AppSettings:
             else (int(memory_limit_env) if memory_limit_env else None)
         )
 
+        combiner_defaults = CombinerConfig()
+        combiner_config = CombinerConfig(
+            top_n=int(getattr(args, "combiner_top_n", combiner_defaults.top_n)),
+            max_factors=int(getattr(args, "combiner_max_factors", combiner_defaults.max_factors)),
+            min_sharpe=float(getattr(args, "combiner_min_sharpe", combiner_defaults.min_sharpe)),
+            min_information_coefficient=float(
+                getattr(args, "combiner_min_ic", combiner_defaults.min_information_coefficient)
+            ),
+        )
+
         return cls(
             symbol=symbol,
             phase=phase,
@@ -61,6 +73,7 @@ class AppSettings:
             parallel_mode=parallel_mode,
             max_workers=max_workers,
             memory_limit_mb=memory_limit,
+            combiner_config=combiner_config,
         )
 
 
