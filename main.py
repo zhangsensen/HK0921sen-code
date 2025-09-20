@@ -55,26 +55,38 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--combiner-top-n",
         type=int,
-        default=combiner_defaults.top_n,
-        help="阶段2中纳入多因子组合评估的顶尖单因子数量",
+        default=None,
+        help=(
+            "阶段2中纳入多因子组合评估的顶尖单因子数量"
+            f"（默认: {combiner_defaults.top_n}）"
+        ),
     )
     parser.add_argument(
         "--combiner-max-factors",
         type=int,
-        default=combiner_defaults.max_factors,
-        help="组合生成时每个策略允许的最大因子个数",
+        default=None,
+        help=(
+            "组合生成时每个策略允许的最大因子个数"
+            f"（默认: {combiner_defaults.max_factors}）"
+        ),
     )
     parser.add_argument(
         "--combiner-min-sharpe",
         type=float,
-        default=combiner_defaults.min_sharpe,
-        help="筛选阶段2因子及策略时所需的最低夏普比率",
+        default=None,
+        help=(
+            "筛选阶段2因子及策略时所需的最低夏普比率"
+            f"（默认: {combiner_defaults.min_sharpe}）"
+        ),
     )
     parser.add_argument(
         "--combiner-min-ic",
         type=float,
-        default=combiner_defaults.min_information_coefficient,
-        help="筛选因子时所需的最小信息系数绝对值",
+        default=None,
+        help=(
+            "筛选因子时所需的最小信息系数绝对值"
+            f"（默认: {combiner_defaults.min_information_coefficient}）"
+        ),
     )
     return parser
 
