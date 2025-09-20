@@ -85,31 +85,55 @@ class HistoricalDataLoader:
         if self.data_root is None:
             raise FileNotFoundError("No data root provided for raw data loading")
 
-        # Check in raw_data subdirectory first
-        timeframe_first = self.data_root / "raw_data" / timeframe / f"{symbol}.parquet"
-        symbol_first = self.data_root / "raw_data" / symbol / f"{timeframe}.parquet"
+        search_locations = [
+            (self.data_root / "raw_data" / timeframe, symbol),
+            (self.data_root / "raw_data" / symbol, timeframe),
+            (self.data_root / timeframe, symbol),
+            (self.data_root / symbol, timeframe),
+        ]
 
-        # If not found in raw_data, try legacy locations
-        if not timeframe_first.exists() and not symbol_first.exists():
-            timeframe_first_legacy = self.data_root / timeframe / f"{symbol}.parquet"
-            symbol_first_legacy = self.data_root / symbol / f"{timeframe}.parquet"
+        for extension in (".parquet", ".csv"):
+            for base_dir, file_stem in search_locations:
+                file_path = base_dir / f"{file_stem}{extension}"
+                if not file_path.exists():
+                    continue
+                if extension == ".parquet":
+                    return pd.read_parquet(file_path)
+                return self._read_csv(file_path)
 
-            if timeframe_first_legacy.exists():
-                timeframe_first = timeframe_first_legacy
-            elif symbol_first_legacy.exists():
-                symbol_first = symbol_first_legacy
+        raise FileNotFoundError(
+            f"Missing data file for {symbol} {timeframe}. "
+            "Checked timeframe-first and symbol-first directories for Parquet/CSV."
+        )
 
-        if timeframe_first.exists():
-            file_path = timeframe_first
-        elif symbol_first.exists():
-            file_path = symbol_first
-        else:
-            raise FileNotFoundError(
-                f"Missing data file for {symbol} {timeframe}. "
-                "Checked both timeframe and symbol directories."
-            )
+    def _read_csv(self, file_path: Path) -> "pd.DataFrame":
+        dataframe = pd.read_csv(file_path)
+        if dataframe.empty:
+            return dataframe
 
-        return pd.read_parquet(file_path)
+        dataframe = dataframe.rename(columns={col: col.lower() for col in dataframe.columns})
+
+        datetime_column = None
+        for candidate in ("timestamp", "datetime", "date"):
+            if candidate in dataframe.columns:
+                datetime_column = candidate
+                break
+        if datetime_column is None:
+            datetime_column = dataframe.columns[0]
+
+        timestamps = pd.to_datetime(dataframe[datetime_column], errors="coerce")
+        valid_mask = timestamps.notna()
+        dataframe = dataframe.loc[valid_mask].copy()
+        timestamps = timestamps[valid_mask]
+        dataframe = dataframe.drop(columns=[datetime_column], errors="ignore")
+        dataframe.index = timestamps
+        dataframe.index.name = None
+
+        for column in ("open", "high", "low", "close", "volume"):
+            if column in dataframe.columns:
+                dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce")
+
+        return dataframe
 
     def _resample_from_base(self, symbol: str, timeframe: str) -> "pd.DataFrame":
         base_timeframe = self._select_base_timeframe(timeframe)

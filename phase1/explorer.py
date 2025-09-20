@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 try:  # pragma: no cover
     import pandas as pd
@@ -12,7 +12,13 @@ except ModuleNotFoundError:  # pragma: no cover
 
 from config import DEFAULT_TIMEFRAMES
 from data_loader import HistoricalDataLoader
-from factors import FactorCalculator, all_factors
+try:  # pragma: no cover - optional heavy dependencies
+    from factors import FactorCalculator, all_factors
+except ModuleNotFoundError:  # pragma: no cover - allows lightweight tests
+    FactorCalculator = Any  # type: ignore[assignment]
+
+    def all_factors() -> list:
+        raise ModuleNotFoundError("numpy/pandas are required to enumerate the default factor set")
 from .backtest_engine import SimpleBacktestEngine
 
 

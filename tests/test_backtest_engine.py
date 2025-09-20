@@ -59,3 +59,16 @@ def test_backtest_engine_applies_transaction_costs(monkeypatch):
     non_zero = difference[np.abs(difference) > 0]
     assert non_zero.size == with_cost["trades_count"]
     assert np.allclose(non_zero, expected_drag)
+
+
+def test_backtest_engine_aligns_numpy_signals(monkeypatch):
+    data, signals = _build_sample_data()
+    engine = SimpleBacktestEngine("0700.HK", allocation=0.5)
+    monkeypatch.setattr(engine.costs, "calculate_total_cost", lambda _: 0.0)
+
+    numpy_signals = signals.to_numpy(dtype=float)
+    result = engine.backtest_factor(data, numpy_signals)
+
+    assert isinstance(result["returns"], pd.Series)
+    assert list(result["returns"].index) == list(data.index)
+    assert isinstance(result["equity_curve"], pd.Series)

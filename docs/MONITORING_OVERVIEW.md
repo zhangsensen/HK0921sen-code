@@ -35,6 +35,51 @@ monitor.record_metric(
 
 The call queues an asynchronous write to SQLite and a JSON artefact inside `<log_dir>/metrics`.
 
+### Factor Metrics & Alerting
+
+Repeated factor experiments can reuse configuration-driven templates and alerts:
+
+```python
+from utils.monitoring import (
+    AlertSeverity,
+    FactorAlertDefinition,
+    FactorMetricTemplate,
+    MonitorConfig,
+    PerformanceMonitor,
+)
+
+config = MonitorConfig(
+    enabled=False,
+    log_dir="runtime/logs",
+    database_path="runtime/monitoring/performance.db",
+    factor_metrics=[
+        FactorMetricTemplate(name="sharpe_ratio"),
+        FactorMetricTemplate(name="max_drawdown", default_tags={"window": "252d"}),
+    ],
+    factor_alerts=[
+        FactorAlertDefinition(
+            name="low_sharpe",
+            metric="sharpe_ratio",
+            condition="<",
+            threshold=0.4,
+            severity=AlertSeverity.WARNING,
+            message_template="Sharpe below 0.4 for {factor_name}: {value:.2f}",
+        )
+    ],
+)
+monitor = PerformanceMonitor(config)
+
+monitor.record_factor_metrics(
+    "momentum",
+    {"sharpe_ratio": 0.35, "max_drawdown": 0.18},
+    extra_tags={"timeframe": "1d"},
+)
+```
+
+- Metric names are normalised to `factor.<metric>` so alert rules and tools can find them reliably.
+- Template tags (for example, the look-back window) merge with runtime tags such as `factor_name`.
+- Alerts flow through the existing `_handle_alert` pipeline with tag-aware messages and persisted artefacts.
+
 ## Tracking Operations
 
 Use `track_operation` as a context manager when you want execution time and optional metadata captured together.
@@ -88,6 +133,16 @@ runtime/
 ```
 
 The repository no longer ships with pre-generated artefacts. Add `runtime/` (or whichever directory you choose) to your deploy-time ignore rules so production instances can rotate logs without polluting the VCS.
+
+### Inspecting Factor Metrics from the CLI
+
+Run `python scripts/factor_metrics.py --hours 12 --metric sharpe_ratio --top 5` to inspect the latest
+factor KPIs:
+
+- The CLI groups entries by `factor_name`, prints the freshest value per KPI, and optionally exports the
+  same window via `--export json` or `--export csv`.
+- Leaderboard mode honours metric names produced by `record_factor_metrics`, so `sharpe_ratio`
+  and `factor.sharpe_ratio` are treated identically.
 
 ## Integration Tips
 
