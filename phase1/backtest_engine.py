@@ -27,10 +27,18 @@ class SimpleBacktestEngine:
         self.costs = HongKongTradingCosts()
 
     def backtest_factor(self, data: "pd.DataFrame", signals: "pd.Series") -> dict:
+        if not isinstance(signals, pd.Series):
+            signals = pd.Series(signals, index=data.index, dtype=float)
+        else:
+            if not signals.index.equals(data.index):
+                signals = signals.reindex(data.index)
+            signals = signals.astype(float)
+        signals = signals.fillna(0.0)
+
         close = data["close"].astype(float)
         returns = close.pct_change().fillna(0.0)
         future_returns = returns.shift(-1).fillna(0.0).to_numpy(dtype=float)
-        raw_signals = signals.fillna(0.0).to_numpy(dtype=float)
+        raw_signals = signals.to_numpy(dtype=float)
         positions = signals.shift(1).fillna(0.0) * self.allocation
         strategy_returns = (returns * positions).astype(float)
 

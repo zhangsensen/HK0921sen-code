@@ -158,3 +158,45 @@ def test_combination_backtest_aligns_on_time_index():
         np.count_nonzero(np.diff(np.sign(expected_array)))
     )
     assert np.isclose(result["win_rate"], float((expected > 0).mean()))
+
+
+def test_combiner_uses_explicit_index_for_array_returns():
+    index_primary = pd.date_range("2024-02-01", periods=4, freq="D")
+    index_secondary = pd.date_range("2024-02-02", periods=4, freq="D")
+
+    returns_primary = np.array([0.01, -0.003, 0.005, 0.007], dtype=float)
+    returns_secondary = np.array([0.008, -0.004, 0.006, 0.01], dtype=float)
+
+    combo = [
+        {
+            "factor": "primary",
+            "timeframe": "1d",
+            "returns": returns_primary,
+            "index": index_primary,
+            "information_coefficient": 0.12,
+        },
+        {
+            "factor": "secondary",
+            "timeframe": "1d",
+            "returns": returns_secondary,
+            "timestamps": [ts.strftime("%Y-%m-%d") for ts in index_secondary],
+            "information_coefficient": 0.09,
+        },
+    ]
+
+    combiner = MultiFactorCombiner("0700.HK", {})
+    result = combiner.backtest_combination(combo)
+
+    expected = pd.concat(
+        [
+            pd.Series(returns_primary, index=index_primary),
+            pd.Series(returns_secondary, index=index_secondary),
+        ],
+        axis=1,
+        join="inner",
+    ).mean(axis=1)
+
+    assert result
+    assert isinstance(result["returns"], pd.Series)
+    assert list(result["returns"].index) == list(expected.index)
+    assert np.allclose(result["returns"], expected)
