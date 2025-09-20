@@ -2,8 +2,8 @@ import asyncio
 import logging
 from pathlib import Path
 
-from hk_factor_discovery.application.configuration import AppSettings
-from hk_factor_discovery.application.services import DiscoveryOrchestrator
+from application.configuration import AppSettings
+from application.services import DiscoveryOrchestrator
 
 
 class StubDatabase:

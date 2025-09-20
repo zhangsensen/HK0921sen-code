@@ -10,16 +10,16 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
-from ..config import DEFAULT_TIMEFRAMES
-from ..data_loader_optimized import OptimizedDataLoader
+from config import DEFAULT_TIMEFRAMES
+from data_loader_optimized import OptimizedDataLoader
 try:  # pragma: no cover - optional heavy dependencies
-    from ..factors import FactorCalculator, all_factors
+    from factors import FactorCalculator, all_factors
 except ModuleNotFoundError:  # pragma: no cover - allows lightweight tests
     FactorCalculator = Any  # type: ignore[assignment]
 
     def all_factors() -> list:
         raise ModuleNotFoundError("pandas/numpy are required for the default factor set")
-from ..utils.factor_cache import FactorCache, get_factor_cache
+from utils.factor_cache import FactorCache, get_factor_cache
 try:  # pragma: no cover - optional dependency
     from .enhanced_backtest_engine import EnhancedBacktestEngine, create_enhanced_backtest_engine
 except ModuleNotFoundError:  # pragma: no cover - allows using stubs in tests
@@ -118,6 +118,7 @@ class ParallelFactorExplorer:
         self.memory_limit_mb = memory_limit_mb
         self.logger = logger or _logger
         self._progress_logged = 0
+        self._process_pool_supported = True
 
     # ------------------------------------------------------------------
     def _log_progress(self, completed: int, total: int) -> None:
@@ -182,29 +183,37 @@ class ParallelFactorExplorer:
         if not tasks:
             return results
 
-        with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
-            future_map = {
-                executor.submit(
-                    _worker_task, self.symbol, task.timeframe, task.factor, task.data, self._engine_factory
-                ): task
-                for task in tasks
-            }
-            for future in as_completed(future_map):
-                task = future_map[future]
-                key = f"{task.timeframe}_{task.factor.name}"
-                try:
-                    _, result = future.result()
-                except Exception as exc:
-                    self.logger.error("并行任务失败 %s: %s", key, exc)
-                    result = self._compute_locally(task.timeframe, task.factor, dataset[task.timeframe])
-                results[key] = result
-                if task.signature is not None:
-                    self.factor_cache.set(
-                        self.symbol, task.timeframe, task.factor.name, task.signature, result
-                    )
-                completed += 1
-                self._log_progress(completed, total)
-                self._check_memory()
+        if not self._process_pool_supported:
+            return self._execute_sequential(tasks, dataset, results, completed, total)
+
+        try:
+            with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
+                future_map = {
+                    executor.submit(
+                        _worker_task, self.symbol, task.timeframe, task.factor, task.data, self._engine_factory
+                    ): task
+                    for task in tasks
+                }
+                for future in as_completed(future_map):
+                    task = future_map[future]
+                    key = f"{task.timeframe}_{task.factor.name}"
+                    try:
+                        _, result = future.result()
+                    except Exception as exc:
+                        self.logger.error("并行任务失败 %s: %s", key, exc)
+                        result = self._compute_locally(task.timeframe, task.factor, dataset[task.timeframe])
+                    results[key] = result
+                    if task.signature is not None:
+                        self.factor_cache.set(
+                            self.symbol, task.timeframe, task.factor.name, task.signature, result
+                        )
+                    completed += 1
+                    self._log_progress(completed, total)
+                    self._check_memory()
+        except (NotImplementedError, PermissionError, OSError) as exc:
+            self._process_pool_supported = False
+            self.logger.warning("进程池不可用，回退到单进程执行: %s", exc)
+            return self._execute_sequential(tasks, dataset, results, completed, total)
         return results
 
     async def explore_all_factors_async(self, batch_size: int | None = None) -> Dict[str, Dict[str, Any]]:
@@ -215,6 +224,32 @@ class ParallelFactorExplorer:
     @property
     def cache_stats(self) -> Dict[str, int]:
         return self.factor_cache.stats.snapshot()
+
+    @property
+    def process_pool_available(self) -> bool:
+        return self._process_pool_supported
+
+    def _execute_sequential(
+        self,
+        tasks: List[_Task],
+        dataset: Dict[str, Any],
+        results: Dict[str, Dict[str, Any]],
+        completed: int,
+        total: int,
+    ) -> Dict[str, Dict[str, Any]]:
+        for task in tasks:
+            key = f"{task.timeframe}_{task.factor.name}"
+            try:
+                result = self._compute_locally(task.timeframe, task.factor, dataset[task.timeframe])
+            except Exception as exc:  # pragma: no cover - defensive guard
+                self.logger.error("本地任务失败 %s: %s", key, exc)
+                continue
+            results[key] = result
+            if task.signature is not None:
+                self.factor_cache.set(self.symbol, task.timeframe, task.factor.name, task.signature, result)
+            completed += 1
+            self._log_progress(completed, total)
+        return results
 
 
 def create_parallel_explorer(symbol: str, **kwargs: Any) -> ParallelFactorExplorer:

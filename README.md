@@ -8,22 +8,22 @@
 ## 仓库结构
 
 ```
-hk_factor_discovery/
-├── __init__.py                         # 延迟加载入口，保持向后兼容
+HK0920sen-code/
 ├── application/                        # 依赖注入容器与工作流编排服务
+│   ├── __init__.py                     # 聚合 AppSettings / ServiceContainer / Orchestrator
 │   ├── configuration.py                # AppSettings，集中管理 CLI + 环境变量配置
 │   ├── container.py                    # ServiceContainer，实现按需实例化与缓存
 │   └── services.py                     # DiscoveryOrchestrator，串联两阶段探索
 ├── config.py                           # 时间框架等核心配置
 ├── data_loader.py                      # 支持缓存、流式批处理的历史数据加载器
+├── data_loader_optimized.py            # 进程池友好的优化版数据加载器
 ├── database.py                         # Repository + SchemaManager 持久化层
 ├── factors/                            # 因子基类、注册中心与全部具体实现
-├── phase1/                             # 单因子探索器与向量化回测引擎
+├── main.py                             # CLI 入口，依赖注入启动流程
+├── phase1/                             # 单因子探索器与回测引擎、并行探索器
 ├── phase2/                             # 多因子组合与优化逻辑
 ├── utils/                              # 缓存、日志、监控、校验等通用工具
-└── main.py                             # CLI 入口，依赖注入启动流程
-
-tests/                                  # Pytest 用例，覆盖配置、容器、缓存等关键模块
+└── tests/                              # Pytest 用例，覆盖配置、容器、缓存等关键模块
 ```
 
 ## 项目特色
@@ -57,7 +57,7 @@ tests/                                  # Pytest 用例，覆盖配置、容器�
 
 3. **运行命令行入口**
    ```bash
-   python -m hk_factor_discovery.main \
+   python -m main \
        --symbol 0700.HK \
        --data-root /path/to/data_root \
        --db-path .local_results/hk_factor_results.sqlite \
@@ -71,8 +71,10 @@ tests/                                  # Pytest 用例，覆盖配置、容器�
 ## 编程接口
 
 ```python
-from hk_factor_discovery import HistoricalDataLoader, SingleFactorExplorer, MultiFactorCombiner
-from hk_factor_discovery.factors import all_factors
+from data_loader import HistoricalDataLoader
+from factors import all_factors
+from phase1 import SingleFactorExplorer
+from phase2 import MultiFactorCombiner
 
 loader = HistoricalDataLoader(data_provider=my_provider)
 factors = all_factors()

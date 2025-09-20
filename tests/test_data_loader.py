@@ -3,7 +3,8 @@ import pytest
 pd = pytest.importorskip("pandas")
 pd_testing = pytest.importorskip("pandas.testing")
 
-from hk_factor_discovery.data_loader import HistoricalDataLoader, OptimizedDataLoader
+from data_loader import HistoricalDataLoader
+from data_loader_optimized import OptimizedDataLoader
 
 
 def test_loader_uses_cache():

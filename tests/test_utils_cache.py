@@ -1,6 +1,6 @@
 import time
 
-from hk_factor_discovery.utils.cache import InMemoryCache
+from utils.cache import InMemoryCache
 
 
 def test_in_memory_cache_store_and_get():

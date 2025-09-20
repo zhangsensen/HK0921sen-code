@@ -8,8 +8,8 @@ try:  # pragma: no cover
 except ModuleNotFoundError:  # pragma: no cover
     pd = None
 
-from ..utils.cost_model import HongKongTradingCosts
-from ..utils.performance_metrics import PerformanceMetrics
+from utils.cost_model import HongKongTradingCosts
+from utils.performance_metrics import PerformanceMetrics
 
 
 class SimpleBacktestEngine:

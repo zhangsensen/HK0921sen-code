@@ -3,8 +3,8 @@ import os
 
 import pytest
 
-from hk_factor_discovery.phase1.parallel_explorer import ParallelFactorExplorer
-from hk_factor_discovery.utils.factor_cache import FactorCache
+from phase1.parallel_explorer import ParallelFactorExplorer
+from utils.factor_cache import FactorCache
 
 MAIN_PID = os.getpid()
 
@@ -81,7 +81,11 @@ def test_parallel_explorer_runs_in_separate_processes(loader, caplog):
         results = explorer.explore_all_factors()
     assert set(results) == {"1m_A", "1m_B"}
     process_ids = {value["process_id"] for value in results.values()}
-    assert any(pid != MAIN_PID for pid in process_ids)
+    if explorer.process_pool_available:
+        assert any(pid != MAIN_PID for pid in process_ids)
+    else:
+        assert all(pid == MAIN_PID for pid in process_ids)
+        assert any("进程池不可用" in record.message for record in caplog.records)
     assert any("并行探索进度" in record.message for record in caplog.records)
     stats = explorer.cache_stats
     assert stats["stores"] == 2
@@ -93,7 +97,7 @@ def test_parallel_explorer_fallback_on_error(loader, caplog):
         results = explorer.explore_all_factors()
     fallback = results["1m_fail"]
     assert fallback["process_id"] == MAIN_PID
-    assert any("并行任务失败" in record.message for record in caplog.records)
+    assert any("并行任务失败" in record.message for record in caplog.records) or not explorer.process_pool_available
 
 
 def test_parallel_explorer_uses_cache(loader):

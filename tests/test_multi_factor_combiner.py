@@ -3,8 +3,8 @@ import pytest
 np = pytest.importorskip("numpy")
 pytest.importorskip("pandas")
 
-from hk_factor_discovery.config import CombinerConfig
-from hk_factor_discovery.phase2.combiner import MultiFactorCombiner
+from config import CombinerConfig
+from phase2.combiner import MultiFactorCombiner
 
 
 def test_combiner_creates_sorted_strategies():

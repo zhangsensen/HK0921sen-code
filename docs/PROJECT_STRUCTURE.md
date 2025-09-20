@@ -1,16 +1,17 @@
 # Project Structure
 
-This document summarises the trimmed layout of `hk_factor_discovery` after the clean-up. Each directory now has a single purpose and the runtime-only artefacts have been moved out of the repository.
+This document summarises the flattened layout after the clean-up. Each directory now has a single purpose and the runtime-only artefacts have been moved out of the repository.
 
 ```
-hk_factor_discovery/
+HK0920sen-code/
 ├── application/           # Thin orchestration layer (settings, DI container, services)
 ├── factors/               # Factor registry plus 72 concrete implementations
-├── phase1/                # Single-factor exploration and backtest engine
+├── phase1/                # Single-factor exploration and backtest engines (serial + parallel)
 ├── phase2/                # Multi-factor combiner and scoring logic
 ├── utils/                 # Shared helpers (logging, monitoring, validation, cache, metrics)
 ├── config.py              # Static configuration for supported timeframes
 ├── data_loader.py         # Historical data loader with smart resampling + caching
+├── data_loader_optimized.py  # Preloading variant used by the parallel explorer
 ├── database.py            # SQLite persistence helpers (results, strategies)
 ├── main.py                # CLI entry point (parses args, wires orchestrator)
 └── tests/                 # Pytest suite covering config, container, loaders and analytics

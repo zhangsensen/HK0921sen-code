@@ -5,7 +5,7 @@
 ## Getting Started
 
 ```python
-from hk_factor_discovery.utils.monitoring import PerformanceMonitor, MonitorConfig
+from utils.monitoring import PerformanceMonitor, MonitorConfig
 
 config = MonitorConfig(
     log_dir="runtime/logs",
@@ -21,7 +21,7 @@ monitor = PerformanceMonitor(config)
 ## Recording Custom Metrics
 
 ```python
-from hk_factor_discovery.utils.monitoring import MetricCategory, MetricType
+from utils.monitoring import MetricCategory, MetricType
 
 monitor.record_metric(
     name="factor_load_rows",
@@ -64,7 +64,7 @@ You can filter by time range or category:
 
 ```python
 from datetime import datetime, timedelta
-from hk_factor_discovery.utils.monitoring import MetricCategory
+from utils.monitoring import MetricCategory
 
 start = datetime.utcnow() - timedelta(hours=2)
 monitor.export_metrics(

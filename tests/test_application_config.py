@@ -1,7 +1,7 @@
 from argparse import Namespace
 from pathlib import Path
 
-from hk_factor_discovery.application.configuration import AppSettings
+from application.configuration import AppSettings
 
 
 def test_app_settings_from_cli_args(tmp_path, monkeypatch):

@@ -6,8 +6,8 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence
 
 import numpy as np
 
-from ..config import CombinerConfig
-from ..utils.performance_metrics import PerformanceMetrics
+from config import CombinerConfig
+from utils.performance_metrics import PerformanceMetrics
 
 
 class MultiFactorCombiner:

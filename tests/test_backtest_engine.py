@@ -3,7 +3,7 @@ import pytest
 np = pytest.importorskip("numpy")
 pd = pytest.importorskip("pandas")
 
-from hk_factor_discovery.phase1.backtest_engine import SimpleBacktestEngine
+from phase1.backtest_engine import SimpleBacktestEngine
 
 
 def _build_sample_data():

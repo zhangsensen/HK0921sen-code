@@ -2,9 +2,9 @@ import pytest
 
 pd = pytest.importorskip("pandas")
 
-from hk_factor_discovery.application.configuration import AppSettings
-from hk_factor_discovery.application.container import ServiceContainer
-from hk_factor_discovery.data_loader import OptimizedDataLoader
+from application.configuration import AppSettings
+from application.container import ServiceContainer
+from data_loader_optimized import OptimizedDataLoader
 
 
 def test_container_provides_singletons(tmp_path):
@@ -14,6 +14,7 @@ def test_container_provides_singletons(tmp_path):
         reset=False,
         data_root=tmp_path,
         db_path=tmp_path / "db.sqlite",
+        parallel_mode="process",
     )
     container = ServiceContainer(settings)
     loader_one = container.data_loader()

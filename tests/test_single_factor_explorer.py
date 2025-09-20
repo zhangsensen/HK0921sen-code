@@ -4,9 +4,9 @@ import pytest
 np = pytest.importorskip("numpy")
 pd = pytest.importorskip("pandas")
 
-from hk_factor_discovery.data_loader import HistoricalDataLoader
-from hk_factor_discovery.factors import all_factors
-from hk_factor_discovery.phase1.explorer import SingleFactorExplorer
+from data_loader import HistoricalDataLoader
+from factors import all_factors
+from phase1.explorer import SingleFactorExplorer
 
 
 def _make_price_frame(periods: int = 200):

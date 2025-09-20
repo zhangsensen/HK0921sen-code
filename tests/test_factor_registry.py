@@ -3,7 +3,7 @@ import pytest
 pytest.importorskip("numpy")
 pytest.importorskip("pandas")
 
-from hk_factor_discovery.factors import all_factors
+from factors import all_factors
 
 
 def test_factor_registry_contains_72_unique_factors():

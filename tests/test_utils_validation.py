@@ -1,6 +1,6 @@
 import pytest
 
-from hk_factor_discovery.utils.validation import validate_symbol
+from utils.validation import validate_symbol
 
 
 def test_validate_symbol_accepts_uppercase():

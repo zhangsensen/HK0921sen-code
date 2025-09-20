@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("pandas")
 
-from hk_factor_discovery.database import DatabaseManager
+from database import DatabaseManager
 
 
 def test_database_roundtrip(tmp_path):
