@@ -25,7 +25,7 @@ class AppSettings:
     parallel_mode: str = "off"
     max_workers: Optional[int] = None
     memory_limit_mb: Optional[int] = None
-    combiner_config: CombinerConfig = field(default_factory=CombinerConfig)
+    combiner: CombinerConfig = field(default_factory=CombinerConfig)
 
     @classmethod
     def from_cli_args(cls, args: object) -> "AppSettings":
@@ -52,12 +52,37 @@ class AppSettings:
         )
 
         combiner_defaults = CombinerConfig()
+
+        def resolve_combiner_value(arg_name: str, env_name: str, caster, default):
+            arg_value = getattr(args, arg_name, None)
+            if arg_value is not None:
+                return caster(arg_value)
+            env_value = os.environ.get(env_name)
+            if env_value is not None:
+                return caster(env_value)
+            return default
+
         combiner_config = CombinerConfig(
-            top_n=int(getattr(args, "combiner_top_n", combiner_defaults.top_n)),
-            max_factors=int(getattr(args, "combiner_max_factors", combiner_defaults.max_factors)),
-            min_sharpe=float(getattr(args, "combiner_min_sharpe", combiner_defaults.min_sharpe)),
-            min_information_coefficient=float(
-                getattr(args, "combiner_min_ic", combiner_defaults.min_information_coefficient)
+            top_n=resolve_combiner_value(
+                "combiner_top_n", "HK_DISCOVERY_COMBINER_TOP_N", int, combiner_defaults.top_n
+            ),
+            max_factors=resolve_combiner_value(
+                "combiner_max_factors",
+                "HK_DISCOVERY_COMBINER_MAX_FACTORS",
+                int,
+                combiner_defaults.max_factors,
+            ),
+            min_sharpe=resolve_combiner_value(
+                "combiner_min_sharpe",
+                "HK_DISCOVERY_COMBINER_MIN_SHARPE",
+                float,
+                combiner_defaults.min_sharpe,
+            ),
+            min_information_coefficient=resolve_combiner_value(
+                "combiner_min_ic",
+                "HK_DISCOVERY_COMBINER_MIN_IC",
+                float,
+                combiner_defaults.min_information_coefficient,
             ),
         )
 
@@ -73,7 +98,7 @@ class AppSettings:
             parallel_mode=parallel_mode,
             max_workers=max_workers,
             memory_limit_mb=memory_limit,
-            combiner_config=combiner_config,
+            combiner=combiner_config,
         )
 
 
