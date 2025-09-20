@@ -3,7 +3,7 @@ import pytest
 pd = pytest.importorskip("pandas")
 pd_testing = pytest.importorskip("pandas.testing")
 
-from hk_factor_discovery.data_loader import HistoricalDataLoader
+from hk_factor_discovery.data_loader import HistoricalDataLoader, OptimizedDataLoader
 
 
 def test_loader_uses_cache():
@@ -61,6 +61,52 @@ def test_load_raw_supports_timeframe_first_layout(tmp_path, monkeypatch):
     loaded = loader.load("0700.HK", "1m")
 
     pd_testing.assert_frame_equal(loaded, dataframe)
+
+
+def test_optimized_loader_uses_disk_cache(tmp_path):
+    dataframe = _sample_frame()
+    calls = {"count": 0}
+
+    def provider(symbol: str, timeframe: str):
+        calls["count"] += 1
+        return dataframe
+
+    loader = OptimizedDataLoader(data_provider=provider, cache_dir=tmp_path, cache_ttl=1)
+    first = loader.load("0700.HK", "1m")
+    assert calls["count"] == 1
+    pd_testing.assert_frame_equal(first, dataframe)
+
+    def failing_provider(*_args, **_kwargs):
+        raise AssertionError("provider should not be called when disk cache hits")
+
+    loader_from_cache = OptimizedDataLoader(
+        data_provider=failing_provider,
+        cache_dir=tmp_path,
+        cache_ttl=1,
+    )
+    second = loader_from_cache.load("0700.HK", "1m")
+    pd_testing.assert_frame_equal(second, dataframe)
+
+
+def test_optimized_loader_preload_and_batch(tmp_path):
+    frames = {"1m": _sample_frame(), "5m": _sample_frame()}
+    calls = {"1m": 0, "5m": 0}
+
+    def provider(symbol: str, timeframe: str):
+        calls[timeframe] += 1
+        return frames[timeframe]
+
+    loader = OptimizedDataLoader(data_provider=provider, cache_dir=tmp_path, max_workers=2)
+    preload_results = loader.preload_timeframes("0700.HK", ["1m", "5m"])
+    assert set(preload_results) == {("0700.HK", "1m"), ("0700.HK", "5m")}
+    assert calls == {"1m": 1, "5m": 1}
+
+    batch = loader.batch_load([("0700.HK", "1m"), ("0700.HK", "5m")])
+    assert set(batch) == {("0700.HK", "1m"), ("0700.HK", "5m")}
+    assert calls == {"1m": 1, "5m": 1}
+
+    loader.load("0700.HK", "1m")
+    assert calls == {"1m": 1, "5m": 1}
 
 
 def test_load_raw_supports_symbol_first_layout(tmp_path, monkeypatch):

@@ -38,7 +38,7 @@ class ServiceContainer:
         return self.resolve(DatabaseManager, lambda: DatabaseManager(self.settings.db_path))
 
     def data_loader(self) -> "HistoricalDataLoader":
-        from ..data_loader import HistoricalDataLoader as LoaderType
+        from ..data_loader import OptimizedDataLoader as LoaderType
 
         def factory() -> LoaderType:
             cache = InMemoryCache()
@@ -46,6 +46,10 @@ class ServiceContainer:
                 data_root=self.settings.data_root,
                 cache_backend=cache,
                 cache_ttl=self.settings.cache_ttl,
+                cache_dir=self.settings.data_cache_dir,
+                max_workers=self.settings.loader_max_workers,
+                enable_preload=self.settings.enable_preload,
+                enable_disk_cache=self.settings.enable_disk_cache,
             )
 
         return self.resolve(LoaderType, factory)
@@ -65,6 +69,8 @@ class ServiceContainer:
                 self.settings.symbol,
                 data_loader=loader,
                 backtest_engine=engine,
+                use_preload=self.settings.enable_preload,
+                use_batch_loading=self.settings.enable_batch_loading,
             )
 
         return self.resolve(ExplorerType, factory)

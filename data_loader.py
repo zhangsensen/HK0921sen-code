@@ -1,8 +1,10 @@
 """Historical data loader with smart resampling for HK stocks."""
 from __future__ import annotations
-
+import os
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Dict, Iterable, Optional, Tuple
 
 try:  # pragma: no cover - optional dependency guard
     import pandas as pd
@@ -134,3 +136,123 @@ class HistoricalDataLoader:
         if timeframe.endswith("h"):
             return "1h" if timeframe in {"2h", "4h"} else "1m"
         return "1m"
+
+
+class OptimizedDataLoader(HistoricalDataLoader):
+    """Extended loader with disk caching, preloading and batching support."""
+
+    def __init__(
+        self,
+        *args,
+        cache_dir: Path | str | None = None,
+        max_workers: Optional[int] = None,
+        enable_disk_cache: bool = True,
+        enable_preload: bool = True,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        if pd is None:  # pragma: no cover - defensive guard
+            raise ModuleNotFoundError("pandas is required for OptimizedDataLoader")
+
+        default_cache_dir = Path(".cache") / "hk_data"
+        if cache_dir is None:
+            cache_dir = default_cache_dir
+        self.cache_dir = Path(cache_dir)
+        if enable_disk_cache:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.enable_disk_cache = enable_disk_cache
+        self.enable_preload = enable_preload
+        self._preloaded: Dict[Tuple[str, str], "pd.DataFrame"] = {}
+        self._preload_lock = threading.Lock()
+        cpu_count = os.cpu_count() or 1
+        worker_count = max(1, max_workers if max_workers is not None else min(32, cpu_count * 2))
+        self._executor = ThreadPoolExecutor(max_workers=worker_count)
+
+    # ------------------------------------------------------------------
+    def _cache_path(self, symbol: str, timeframe: str) -> Path:
+        safe_symbol = symbol.replace("/", "_").replace("\\", "_")
+        return self.cache_dir / timeframe / f"{safe_symbol}.pkl"
+
+    def _load_from_disk(self, symbol: str, timeframe: str) -> "pd.DataFrame" | None:
+        if not self.enable_disk_cache:
+            return None
+        path = self._cache_path(symbol, timeframe)
+        if not path.exists():
+            return None
+        df = pd.read_pickle(path)
+        self.cache.set((symbol, timeframe), df, ttl=self.cache_ttl)
+        return df
+
+    def _store_on_disk(self, symbol: str, timeframe: str, data: "pd.DataFrame") -> None:
+        if not self.enable_disk_cache:
+            return
+        path = self._cache_path(symbol, timeframe)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data.to_pickle(path)
+
+    def load(self, symbol: str, timeframe: str) -> "pd.DataFrame":  # type: ignore[override]
+        key = (symbol, timeframe)
+        with self._preload_lock:
+            preloaded = self._preloaded.get(key)
+        if preloaded is not None:
+            return preloaded
+
+        cached_disk = self._load_from_disk(symbol, timeframe)
+        if cached_disk is not None:
+            return cached_disk
+
+        data = super().load(symbol, timeframe)
+        self._store_on_disk(symbol, timeframe, data)
+        return data
+
+    def preload_timeframes(self, symbol: str, timeframes: Iterable[str]) -> Dict[Tuple[str, str], "pd.DataFrame"]:
+        if not self.enable_preload:
+            return {}
+
+        futures = {
+            self._executor.submit(self.load, symbol, timeframe): (symbol, timeframe)
+            for timeframe in timeframes
+        }
+        results: Dict[Tuple[str, str], "pd.DataFrame"] = {}
+        for future, key in futures.items():
+            data = future.result()
+            with self._preload_lock:
+                self._preloaded[key] = data
+            results[key] = data
+        return results
+
+    def batch_load(
+        self,
+        requests: Iterable[Tuple[str, str]],
+        use_preloaded: bool = True,
+    ) -> Dict[Tuple[str, str], "pd.DataFrame"]:
+        results: Dict[Tuple[str, str], "pd.DataFrame"] = {}
+        pending: Dict[Tuple[str, str], Tuple[str, str]] = {}
+        for symbol, timeframe in requests:
+            key = (symbol, timeframe)
+            if use_preloaded:
+                with self._preload_lock:
+                    if key in self._preloaded:
+                        results[key] = self._preloaded[key]
+                        continue
+            cached = self.cache.get(key)
+            if cached is not None:
+                results[key] = cached
+            else:
+                pending[key] = key
+
+        futures = {
+            self._executor.submit(self.load, symbol, timeframe): key
+            for key, (symbol, timeframe) in pending.items()
+        }
+        for future, key in futures.items():
+            results[key] = future.result()
+        return results
+
+    def clear_cache(self) -> None:  # type: ignore[override]
+        super().clear_cache()
+        with self._preload_lock:
+            self._preloaded.clear()
+
+
+__all__ = ["HistoricalDataLoader", "OptimizedDataLoader"]

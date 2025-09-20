@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, Iterable, List, Mapping, Optional
+from typing import Dict, Iterable, List, Optional
 
 try:  # pragma: no cover
     import pandas as pd
@@ -26,6 +26,8 @@ class SingleFactorExplorer:
         factors: Optional[Iterable[FactorCalculator]] = None,
         data_loader: Optional[HistoricalDataLoader] = None,
         backtest_engine: Optional[SimpleBacktestEngine] = None,
+        use_preload: bool = True,
+        use_batch_loading: bool = True,
     ) -> None:
         if pd is None:
             raise ModuleNotFoundError("pandas is required for factor exploration")
@@ -36,11 +38,30 @@ class SingleFactorExplorer:
         if self.data_loader is None:
             raise ValueError("data_loader must be provided for SingleFactorExplorer")
         self.backtest_engine = backtest_engine or SimpleBacktestEngine(symbol)
+        self.use_preload = use_preload
+        self.use_batch_loading = use_batch_loading
+
+    # ------------------------------------------------------------------
+    def _load_all_timeframes(self) -> Dict[str, "pd.DataFrame"]:
+        loader = self.data_loader
+        if self.use_preload and hasattr(loader, "preload_timeframes"):
+            loader.preload_timeframes(self.symbol, self.timeframes)
+
+        if self.use_batch_loading and hasattr(loader, "batch_load"):
+            pairs = [(self.symbol, timeframe) for timeframe in self.timeframes]
+            loaded = loader.batch_load(pairs)
+            return {
+                timeframe: loaded[(self.symbol, timeframe)]
+                for timeframe in self.timeframes
+            }
+
+        return {timeframe: loader.load(self.symbol, timeframe) for timeframe in self.timeframes}
 
     def explore_all_factors(self) -> Dict[str, Dict[str, object]]:
         results: Dict[str, Dict[str, object]] = {}
+        data_by_timeframe = self._load_all_timeframes()
         for timeframe in self.timeframes:
-            data = self.data_loader.load(self.symbol, timeframe)
+            data = data_by_timeframe[timeframe]
             for factor in self.factors:
                 key = f"{timeframe}_{factor.name}"
                 results[key] = self.explore_single_factor(timeframe, factor, data)
@@ -50,8 +71,9 @@ class SingleFactorExplorer:
         results: Dict[str, Dict[str, object]] = {}
         loop = asyncio.get_running_loop()
 
+        data_by_timeframe = self._load_all_timeframes()
         for timeframe in self.timeframes:
-            data = self.data_loader.load(self.symbol, timeframe)
+            data = data_by_timeframe[timeframe]
             semaphore = asyncio.Semaphore(max(1, batch_size))
 
             async def run_factor(factor: FactorCalculator) -> tuple[str, Dict[str, object]]:
