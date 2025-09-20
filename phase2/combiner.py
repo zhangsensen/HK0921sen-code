@@ -6,6 +6,11 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence
 
 import numpy as np
 
+try:  # pragma: no cover - optional dependency guard
+    import pandas as pd
+except ModuleNotFoundError:  # pragma: no cover
+    pd = None
+
 from config import CombinerConfig
 from utils.performance_metrics import PerformanceMetrics
 
@@ -61,33 +66,59 @@ class MultiFactorCombiner:
         return combos
 
     def backtest_combination(self, combo: Sequence[Mapping[str, object]]) -> Dict[str, object]:
-        returns_arrays = []
+        series_list = []
+        arrays: List[np.ndarray] = []
         for factor in combo:
             returns = factor.get("returns")
             if returns is None:
                 continue
-            returns_arrays.append(np.asarray(returns, dtype=float))
-        if not returns_arrays:
+            if pd is not None:
+                if isinstance(returns, pd.Series):
+                    series = returns.astype(float)
+                else:
+                    series = pd.Series(np.asarray(returns, dtype=float))
+                series_list.append(series)
+            else:  # pragma: no cover - pandas optional fallback
+                arrays.append(np.asarray(returns, dtype=float))
+
+        combined_series = None
+        if series_list:
+            combined_frame = pd.concat(series_list, axis=1, join="inner")
+            combined_frame = combined_frame.dropna(how="all")
+            if combined_frame.empty:
+                return {}
+            combined_series = combined_frame.mean(axis=1, skipna=True).astype(float)
+            combined_returns = combined_series.to_numpy(dtype=float)
+        else:
+            if not arrays:
+                return {}
+            min_length = min(len(arr) for arr in arrays)
+            aligned = np.array([arr[-min_length:] for arr in arrays])
+            combined_returns = aligned.mean(axis=0)
+
+        if combined_returns.size == 0:
             return {}
-        min_length = min(len(arr) for arr in returns_arrays)
-        aligned = np.array([arr[-min_length:] for arr in returns_arrays])
-        combined_returns = aligned.mean(axis=0)
 
         sharpe = PerformanceMetrics.calculate_sharpe_ratio(combined_returns)
         stability = PerformanceMetrics.calculate_stability(combined_returns)
-        gains = combined_returns[combined_returns > 0]
-        losses = combined_returns[combined_returns < 0]
+        if combined_series is not None:
+            gains = combined_series[combined_series > 0].to_numpy(dtype=float)
+            losses = combined_series[combined_series < 0].to_numpy(dtype=float)
+            win_rate = float((combined_series > 0).mean())
+        else:  # pragma: no cover - pandas optional fallback
+            gains = combined_returns[combined_returns > 0]
+            losses = combined_returns[combined_returns < 0]
+            win_rate = float((combined_returns > 0).mean())
         profit_factor = PerformanceMetrics.calculate_profit_factor(gains, losses)
         equity_curve = np.cumprod(1 + combined_returns)
         max_drawdown = PerformanceMetrics.calculate_max_drawdown(equity_curve)
         trades_count = int(np.count_nonzero(np.diff(np.sign(combined_returns))))
-        win_rate = float((combined_returns > 0).mean())
 
         factor_names = [f["factor"] for f in combo]
         timeframes = [f["timeframe"] for f in combo]
         avg_ic = float(np.mean([float(f.get("information_coefficient", 0.0) or 0.0) for f in combo]))
         strategy_name = "+".join(factor_names)
-        return {
+        result = {
             "symbol": self.symbol,
             "strategy_name": strategy_name,
             "factors": factor_names,
@@ -100,6 +131,9 @@ class MultiFactorCombiner:
             "max_drawdown": max_drawdown,
             "average_information_coefficient": avg_ic,
         }
+        if combined_series is not None:
+            result["returns"] = combined_series
+        return result
 
     def discover_strategies(self) -> List[Dict[str, object]]:
         top_factors = self.select_top_factors()

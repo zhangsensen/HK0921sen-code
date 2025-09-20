@@ -36,6 +36,8 @@ def test_backtest_engine_scales_returns_with_allocation(monkeypatch):
     result_full = engine_full.backtest_factor(data, signals)
     result_partial = engine_partial.backtest_factor(data, signals)
 
+    assert isinstance(result_full["returns"], pd.Series)
+    assert list(result_full["returns"].index) == list(data.index)
     assert np.allclose(result_partial["returns"], result_full["returns"] * 0.25)
     assert result_full["trades_count"] == result_partial["trades_count"]
 

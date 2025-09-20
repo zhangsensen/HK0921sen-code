@@ -91,9 +91,15 @@ class FactorCache:
         if data is None:
             return None
         try:
-            if pd is not None and isinstance(data, pd.DataFrame):
-                sample = data.tail(min(len(data), 200))
-                payload = sample.to_json(date_format="iso", orient="split").encode()
+            if pd is not None:
+                if isinstance(data, pd.DataFrame):
+                    sample = data.tail(min(len(data), 200))
+                    payload = sample.to_json(date_format="iso", orient="split").encode()
+                elif isinstance(data, pd.Series):
+                    sample = data.tail(min(len(data), 200))
+                    payload = sample.to_json(date_format="iso", orient="split").encode()
+                else:
+                    payload = pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
             else:
                 payload = pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
             return hashlib.sha1(payload).hexdigest()
