@@ -1,10 +1,11 @@
 import pytest
 
 np = pytest.importorskip("numpy")
-pytest.importorskip("pandas")
+pd = pytest.importorskip("pandas")
 
 from config import CombinerConfig
 from phase2.combiner import MultiFactorCombiner
+from utils.performance_metrics import PerformanceMetrics
 
 
 def test_combiner_creates_sorted_strategies():
@@ -19,7 +20,10 @@ def test_combiner_creates_sorted_strategies():
             "win_rate": 0.6,
             "profit_factor": 1.5,
             "max_drawdown": 0.1,
-            "returns": np.array([0.01, 0.005, -0.002, 0.004]),
+            "returns": pd.Series(
+                [0.01, 0.005, -0.002, 0.004],
+                index=pd.date_range("2024-01-01", periods=4, freq="D"),
+            ),
             "information_coefficient": 0.08,
         },
         "1m_factor_b": {
@@ -32,7 +36,10 @@ def test_combiner_creates_sorted_strategies():
             "win_rate": 0.55,
             "profit_factor": 1.4,
             "max_drawdown": 0.11,
-            "returns": np.array([0.008, 0.004, -0.001, 0.003]),
+            "returns": pd.Series(
+                [0.008, 0.004, -0.001, 0.003],
+                index=pd.date_range("2024-01-01", periods=4, freq="D"),
+            ),
             "information_coefficient": 0.05,
         },
         "1m_factor_c": {
@@ -45,7 +52,10 @@ def test_combiner_creates_sorted_strategies():
             "win_rate": 0.52,
             "profit_factor": 1.2,
             "max_drawdown": 0.12,
-            "returns": np.array([0.006, 0.002, -0.003, 0.002]),
+            "returns": pd.Series(
+                [0.006, 0.002, -0.003, 0.002],
+                index=pd.date_range("2024-01-01", periods=4, freq="D"),
+            ),
             "information_coefficient": 0.02,
         },
     }
@@ -71,7 +81,10 @@ def test_select_top_factors_prioritizes_sharpe_and_ic():
             "win_rate": 0.5,
             "profit_factor": 1.1,
             "max_drawdown": 0.1,
-            "returns": np.array([0.01, 0.0, -0.002, 0.003]),
+            "returns": pd.Series(
+                [0.01, 0.0, -0.002, 0.003],
+                index=pd.date_range("2024-01-01", periods=4, freq="D"),
+            ),
             "information_coefficient": 0.001 if i == 0 else 0.1,
         }
         for i in range(4)
@@ -86,3 +99,62 @@ def test_select_top_factors_prioritizes_sharpe_and_ic():
     assert len(top) == 2
     # factor_0 has the best sharpe but a near-zero IC so it should be filtered out
     assert all(entry["factor"] != "factor_0" for entry in top)
+
+
+def test_combination_backtest_aligns_on_time_index():
+    index_fast = pd.date_range("2024-01-01", periods=5, freq="h")
+    index_slow = pd.date_range("2024-01-01 02:00", periods=4, freq="h")
+
+    fast_returns = pd.Series([0.01, -0.005, 0.007, 0.002, 0.004], index=index_fast)
+    slow_returns = pd.Series([0.02, -0.01, 0.015, 0.005], index=index_slow)
+
+    combo = [
+        {
+            "factor": "fast",
+            "timeframe": "1h",
+            "returns": fast_returns,
+            "information_coefficient": 0.1,
+        },
+        {
+            "factor": "slow",
+            "timeframe": "4h",
+            "returns": slow_returns,
+            "information_coefficient": 0.2,
+        },
+    ]
+
+    combiner = MultiFactorCombiner("0700.HK", {})
+    result = combiner.backtest_combination(combo)
+
+    expected = pd.concat([fast_returns, slow_returns], axis=1, join="inner").mean(axis=1)
+    expected_array = expected.to_numpy(dtype=float)
+
+    assert result
+    assert isinstance(result["returns"], pd.Series)
+    assert list(result["returns"].index) == list(expected.index)
+    assert np.allclose(result["returns"], expected)
+    assert result["timeframes"] == ["1h", "4h"]
+    assert np.isclose(
+        result["average_information_coefficient"], np.mean([0.1, 0.2])
+    )
+    assert np.isclose(
+        result["sharpe_ratio"], PerformanceMetrics.calculate_sharpe_ratio(expected_array)
+    )
+    assert np.isclose(
+        result["stability"], PerformanceMetrics.calculate_stability(expected_array)
+    )
+    assert np.isclose(
+        result["profit_factor"],
+        PerformanceMetrics.calculate_profit_factor(
+            expected[expected > 0].to_numpy(dtype=float),
+            expected[expected < 0].to_numpy(dtype=float),
+        ),
+    )
+    assert np.isclose(
+        result["max_drawdown"],
+        PerformanceMetrics.calculate_max_drawdown(np.cumprod(1 + expected_array)),
+    )
+    assert result["trades_count"] == int(
+        np.count_nonzero(np.diff(np.sign(expected_array)))
+    )
+    assert np.isclose(result["win_rate"], float((expected > 0).mean()))
