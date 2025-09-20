@@ -32,6 +32,22 @@ def _build_parser() -> argparse.ArgumentParser:
         default="INFO",
         help="日志级别 (DEBUG/INFO/WARNING/ERROR)",
     )
+    parser.add_argument(
+        "--parallel-mode",
+        choices=["off", "process"],
+        default="off",
+        help="并行执行模式: off 表示单进程，process 使用多进程",
+    )
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        help="并行模式下的最大进程数；默认使用 CPU 核心数减一",
+    )
+    parser.add_argument(
+        "--memory-limit-mb",
+        type=int,
+        help="内存监控阈值，超过后输出警告信息",
+    )
     return parser
 
 

@@ -10,9 +10,13 @@ from .configuration import AppSettings
 
 if TYPE_CHECKING:  # pragma: no cover - type hinting only
     from ..data_loader import HistoricalDataLoader
+    from ..data_loader_optimized import OptimizedDataLoader
     from ..phase1.backtest_engine import SimpleBacktestEngine
+    from ..phase1.enhanced_backtest_engine import EnhancedBacktestEngine
     from ..phase1.explorer import SingleFactorExplorer
+    from ..phase1.parallel_explorer import ParallelFactorExplorer
     from ..phase2.combiner import MultiFactorCombiner
+    from ..utils.factor_cache import FactorCache
 
 T = TypeVar("T")
 
@@ -38,6 +42,20 @@ class ServiceContainer:
         return self.resolve(DatabaseManager, lambda: DatabaseManager(self.settings.db_path))
 
     def data_loader(self) -> "HistoricalDataLoader":
+        if self.settings.parallel_mode == "process":
+            from ..data_loader_optimized import OptimizedDataLoader as LoaderType
+
+            def factory() -> LoaderType:
+                cache = InMemoryCache()
+                return LoaderType(
+                    data_root=self.settings.data_root,
+                    cache_backend=cache,
+                    cache_ttl=self.settings.cache_ttl,
+                    max_workers=self.settings.max_workers,
+                )
+
+            return self.resolve(LoaderType, factory)
+
         from ..data_loader import HistoricalDataLoader as LoaderType
 
         def factory() -> LoaderType:
@@ -51,11 +69,40 @@ class ServiceContainer:
         return self.resolve(LoaderType, factory)
 
     def backtest_engine(self) -> "SimpleBacktestEngine":
+        if self.settings.parallel_mode == "process":
+            from ..phase1.enhanced_backtest_engine import EnhancedBacktestEngine
+
+            return EnhancedBacktestEngine(self.settings.symbol)
+
         from ..phase1.backtest_engine import SimpleBacktestEngine
 
         return SimpleBacktestEngine(self.settings.symbol)
 
+    def factor_cache(self) -> "FactorCache":
+        from ..utils.factor_cache import FactorCache
+
+        return self.resolve(FactorCache, FactorCache)
+
     def factor_explorer(self) -> "SingleFactorExplorer":
+        if self.settings.parallel_mode == "process":
+            from ..phase1.parallel_explorer import ParallelFactorExplorer as ExplorerType
+            from ..phase1.enhanced_backtest_engine import create_enhanced_backtest_engine
+
+            def factory() -> ExplorerType:
+                loader = self.data_loader()
+                cache = self.factor_cache()
+                return ExplorerType(
+                    self.settings.symbol,
+                    data_loader=loader,  # type: ignore[arg-type]
+                    factor_cache=cache,
+                    backtest_engine_factory=create_enhanced_backtest_engine,
+                    max_workers=self.settings.max_workers,
+                    memory_limit_mb=self.settings.memory_limit_mb,
+                    logger=self._logger,
+                )
+
+            return self.resolve(ExplorerType, factory)
+
         from ..phase1.explorer import SingleFactorExplorer as ExplorerType
 
         def factory() -> ExplorerType:
