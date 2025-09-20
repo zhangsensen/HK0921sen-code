@@ -76,7 +76,19 @@ class MultiFactorCombiner:
                 if isinstance(returns, pd.Series):
                     series = returns.astype(float)
                 else:
-                    series = pd.Series(np.asarray(returns, dtype=float))
+                    index_data = factor.get("index")
+                    if index_data is None:
+                        index_data = factor.get("timestamps")
+                    if index_data is not None and not isinstance(index_data, pd.Index):
+                        index_data = pd.Index(index_data)
+                    if index_data is not None and getattr(index_data.dtype, "kind", None) in {"O", "U", "S"}:
+                        try:
+                            index_data = pd.to_datetime(index_data)
+                        except (TypeError, ValueError):
+                            pass
+                    series = pd.Series(np.asarray(returns, dtype=float), index=index_data)
+                series = series.sort_index()
+                series.name = factor.get("factor", series.name)
                 series_list.append(series)
             else:  # pragma: no cover - pandas optional fallback
                 arrays.append(np.asarray(returns, dtype=float))

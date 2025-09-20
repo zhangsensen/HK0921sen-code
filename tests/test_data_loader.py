@@ -61,7 +61,20 @@ def test_load_raw_supports_timeframe_first_layout(tmp_path, monkeypatch):
     loader = HistoricalDataLoader(data_root=tmp_path)
     loaded = loader.load("0700.HK", "1m")
 
-    pd_testing.assert_frame_equal(loaded, dataframe)
+    pd_testing.assert_frame_equal(loaded, dataframe, check_freq=False)
+
+
+def test_load_raw_supports_csv_files(tmp_path):
+    dataframe = _sample_frame()
+    csv_dir = tmp_path / "raw_data" / "1m"
+    csv_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = csv_dir / "0700.HK.csv"
+    dataframe.reset_index().rename(columns={"index": "timestamp"}).to_csv(csv_path, index=False)
+
+    loader = HistoricalDataLoader(data_root=tmp_path)
+    loaded = loader.load("0700.HK", "1m")
+
+    pd_testing.assert_frame_equal(loaded, dataframe, check_freq=False)
 
 
 def test_optimized_loader_uses_disk_cache(tmp_path):
