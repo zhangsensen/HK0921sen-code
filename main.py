@@ -1,74 +1,10 @@
-"""Command line entry for the HK factor discovery workflow."""
+"""Console entry point compatibility wrapper."""
 from __future__ import annotations
 
-import argparse
-from typing import Iterable, Sequence
+from hk_factor_discovery.main import main
 
-try:  # pragma: no cover - optional dependency guard
-    import pandas as pd
-except ModuleNotFoundError:  # pragma: no cover - handled via runtime error
-    pd = None
-
-from .application import AppSettings, DiscoveryOrchestrator, ServiceContainer
-from .application.services import PhaseResult
-from .utils.logging import configure
+__all__ = ["main"]
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="港股因子探索系统")
-    parser.add_argument("--symbol", required=True, help="股票代码，如: 0700.HK")
-    parser.add_argument("--phase", choices=["phase1", "phase2", "both"], default="both")
-    parser.add_argument("--reset", action="store_true", help="重置数据库")
-    parser.add_argument(
-        "--data-root",
-        help="可选的本地数据目录，支持 symbol/timeframe.parquet 或 timeframe/symbol.parquet 布局",
-    )
-    parser.add_argument(
-        "--db-path",
-        help="SQLite 数据库路径；也可通过 HK_DISCOVERY_DB 环境变量配置",
-    )
-    parser.add_argument(
-        "--log-level",
-        default="INFO",
-        help="日志级别 (DEBUG/INFO/WARNING/ERROR)",
-    )
-    return parser
-
-
-def _summarise_phase1(result: PhaseResult) -> str:
-    total = len(result.phase1)
-    return f"✅ 完成 {total} 个因子探索"
-
-
-def _summarise_phase2(strategies: Sequence[dict[str, object]]) -> str:
-    count = len(strategies)
-    return f"✅ 发现 {count} 个优质策略"
-
-
-def _run_workflow(args) -> PhaseResult:
-    settings = AppSettings.from_cli_args(args)
-    configure(settings.log_level)
-    container = ServiceContainer(settings)
-    orchestrator = DiscoveryOrchestrator(settings, container)
-    return orchestrator.run()
-
-
-def main(argv: list[str] | None = None) -> int:
-    if pd is None:
-        raise ModuleNotFoundError("pandas is required to run the discovery workflow")
-
-    parser = _build_parser()
-    args = parser.parse_args(argv)
-
-    result = _run_workflow(args)
-    if args.phase in {"phase1", "both"}:
-        print(_summarise_phase1(result))
-    if args.phase in {"phase2", "both"}:
-        print(_summarise_phase2(result.strategies))
-
-    print("🎉 系统运行完成！")
-    return 0
-
-
-if __name__ == "__main__":  # pragma: no cover - CLI entry
-    raise SystemExit(main())
+if __name__ == "__main__":  # pragma: no cover
+    main()
