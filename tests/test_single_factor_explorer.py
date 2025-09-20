@@ -75,3 +75,34 @@ def test_async_explorer_matches_sync():
     expected = explorer.explore_all_factors()
     actual = asyncio.run(explorer.explore_all_factors_async(batch_size=1))
     assert expected.keys() == actual.keys()
+
+
+def test_explorer_uses_preload_and_batch():
+    class RecordingLoader:
+        def __init__(self) -> None:
+            self.preload_args = None
+            self.batch_requests = None
+
+        def preload_timeframes(self, symbol, timeframes):
+            self.preload_args = (symbol, tuple(timeframes))
+            return {(symbol, tf): _make_price_frame() for tf in timeframes}
+
+        def batch_load(self, requests):
+            self.batch_requests = tuple(requests)
+            return {req: _make_price_frame() for req in requests}
+
+        def load(self, *_args, **_kwargs):  # pragma: no cover - should not be used
+            raise AssertionError("load should not be called when batch interface is available")
+
+    loader = RecordingLoader()
+    subset = all_factors()[:1]
+    explorer = SingleFactorExplorer(
+        "0700.HK",
+        timeframes=["1m", "5m"],
+        factors=subset,
+        data_loader=loader,  # type: ignore[arg-type]
+    )
+    results = explorer.explore_all_factors()
+    assert results  # ensure at least one result computed
+    assert loader.preload_args == ("0700.HK", ("1m", "5m"))
+    assert loader.batch_requests == (("0700.HK", "1m"), ("0700.HK", "5m"))

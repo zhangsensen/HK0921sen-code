@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 __all__ = [
@@ -12,6 +13,11 @@ __all__ = [
     "MultiFactorCombiner",
     "DatabaseManager",
 ]
+
+# Allow importing subpackages that live at the project root.
+_PACKAGE_ROOT = Path(__file__).resolve().parent
+_PROJECT_ROOT = _PACKAGE_ROOT.parent
+__path__ = [str(_PACKAGE_ROOT), str(_PROJECT_ROOT)]
 
 
 def __getattr__(name: str) -> Any:  # pragma: no cover - thin wrapper
@@ -28,3 +34,4 @@ def __getattr__(name: str) -> Any:  # pragma: no cover - thin wrapper
     if name == "DatabaseManager":
         return import_module("hk_factor_discovery.database").DatabaseManager
     raise AttributeError(name)
+
