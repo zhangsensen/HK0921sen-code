@@ -125,8 +125,8 @@ class ServiceContainer:
         from phase2.combiner import MultiFactorCombiner as CombinerType
 
         return CombinerType(
-            self.settings.symbol,
-            phase1_results,
+            symbol=self.settings.symbol,
+            phase1_results=phase1_results,
             config=self.settings.combiner,
             data_loader=self.data_loader(),
         )
