@@ -7,7 +7,10 @@ Enhanced Performance Monitoring System for Hong Kong Factor Discovery System
 
 import json
 import os
-import psutil
+try:  # pragma: no cover - optional dependency
+    import psutil
+except ModuleNotFoundError:  # pragma: no cover - monitoring can run without system stats
+    psutil = None  # type: ignore[assignment]
 import sqlite3
 import threading
 import time
@@ -15,10 +18,10 @@ import gzip
 import hashlib
 from collections import defaultdict, deque
 from contextlib import contextmanager
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Callable, Union
+from typing import Any, Dict, Iterable, List, Optional, Callable, Union
 from enum import Enum
 
 # 导入我们现有的日志系统
@@ -91,6 +94,31 @@ class AlertSeverity(Enum):
 
 
 @dataclass
+class FactorMetricTemplate:
+    """Template describing a factor-level metric to be collected."""
+
+    name: str
+    unit: Optional[str] = None
+    description: Optional[str] = None
+    default_tags: Dict[str, str] = field(default_factory=dict)
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class FactorAlertDefinition:
+    """Configuration for alerting on factor metrics."""
+
+    name: str
+    metric: str
+    condition: str
+    threshold: float
+    severity: AlertSeverity
+    message_template: str
+    enabled: bool = True
+    cooldown_minutes: int = 5
+
+
+@dataclass
 class MetricData:
     """增强指标数据"""
     name: str
@@ -143,6 +171,7 @@ class Alert:
     timestamp: datetime
     resolved: bool = False
     resolved_at: Optional[datetime] = None
+    tags: Optional[Dict[str, str]] = None
 
 
 @dataclass
@@ -161,6 +190,8 @@ class MonitorConfig:
     export_interval_seconds: int = 300
     compression_enabled: bool = True
     alert_thresholds: Dict[str, Dict[str, float]] = None
+    factor_metrics: List[FactorMetricTemplate] = field(default_factory=list)
+    factor_alerts: List[FactorAlertDefinition] = field(default_factory=list)
 
     def __post_init__(self):
         if self.alert_thresholds is None:
@@ -171,6 +202,33 @@ class MonitorConfig:
                 "operation_duration": {"warning": 10.0, "critical": 30.0},
                 "error_rate": {"warning": 0.05, "critical": 0.1}
             }
+
+        def _ensure_template(item: Union[FactorMetricTemplate, Dict[str, Any]]) -> FactorMetricTemplate:
+            if isinstance(item, FactorMetricTemplate):
+                return item
+            return FactorMetricTemplate(**item)
+
+        def _ensure_alert(item: Union[FactorAlertDefinition, Dict[str, Any]]) -> FactorAlertDefinition:
+            if isinstance(item, FactorAlertDefinition):
+                return item
+            # 支持 YAML/INI 中 severity 的字符串配置
+            severity = item.get("severity")
+            if isinstance(severity, str):
+                try:
+                    severity_enum = AlertSeverity(severity.lower())
+                except ValueError as exc:
+                    raise ValueError(f"Unknown alert severity: {severity}") from exc
+                item = {**item, "severity": severity_enum}
+            return FactorAlertDefinition(**item)
+
+        self.factor_metrics = [
+            _ensure_template(template)
+            for template in self.factor_metrics
+        ]
+        self.factor_alerts = [
+            _ensure_alert(alert)
+            for alert in self.factor_alerts
+        ]
 
 
 class PerformanceMonitor:
@@ -186,6 +244,14 @@ class PerformanceMonitor:
         self.active_alerts: Dict[str, Alert] = {}
         self.alert_rules: Dict[str, AlertRule] = {}
         self.custom_metrics: Dict[str, Dict[str, Any]] = {}
+        self.factor_metric_templates: Dict[str, FactorMetricTemplate] = {}
+
+        if psutil is None and config.enable_system_metrics:
+            self.logger.warning(
+                LogCategory.PERFORMANCE,
+                "psutil not available; system metrics collection disabled",
+            )
+            config.enable_system_metrics = False
 
         # 操作统计
         self.operation_timers: Dict[str, float] = {}
@@ -205,6 +271,10 @@ class PerformanceMonitor:
 
         # 注册默认告警规则
         self._register_default_alert_rules()
+        if config.factor_metrics:
+            self.register_factor_metric_templates(config.factor_metrics)
+        if config.factor_alerts:
+            self.register_factor_alerts(config.factor_alerts)
 
         # 启动监控
         if config.enabled:
@@ -334,8 +404,9 @@ class PerformanceMonitor:
         self.logger.info(LogCategory.PERFORMANCE, "Enhanced performance monitoring started")
 
         # 启动数据收集线程
-        self._collection_thread = threading.Thread(target=self._collection_loop, daemon=True)
-        self._collection_thread.start()
+        if self.config.enable_system_metrics:
+            self._collection_thread = threading.Thread(target=self._collection_loop, daemon=True)
+            self._collection_thread.start()
 
         # 启动告警检查线程
         if self.config.enable_alerting:
@@ -393,6 +464,8 @@ class PerformanceMonitor:
 
     def _collect_system_metrics(self) -> PerformanceSnapshot:
         """收集系统指标"""
+        if psutil is None:  # pragma: no cover - guarded by __init__
+            raise RuntimeError("psutil is required to collect system metrics")
         process = psutil.Process()
 
         # 获取网络信息
@@ -501,6 +574,76 @@ class PerformanceMonitor:
             return value != threshold
         return False
 
+    def _normalise_factor_metric_name(self, name: str) -> str:
+        """Ensure factor metrics share the same prefix for storage and alerting."""
+
+        cleaned = name.strip()
+        if cleaned.startswith("factor."):
+            return cleaned
+        if cleaned.startswith("factor_"):
+            cleaned = cleaned[len("factor_") :]
+        cleaned = cleaned.replace(" ", "_")
+        return f"factor.{cleaned}"
+
+    def _build_alert_key(self, rule: AlertRule, metric: MetricData) -> str:
+        """Create a stable key for active alerts, including factor tags when present."""
+
+        if metric.category == MetricCategory.FACTOR_COMPUTATION and metric.tags:
+            factor_name = metric.tags.get("factor_name")
+            if factor_name:
+                return f"{rule.name}:{factor_name}"
+        return rule.name
+
+    def _render_alert_message(self, rule: AlertRule, metric: MetricData) -> str:
+        """Build an alert message that understands metric tags."""
+
+        context = {"value": metric.value}
+        if metric.tags:
+            context.update(metric.tags)
+
+        try:
+            return rule.message_template.format(**context)
+        except KeyError:
+            # 回落到旧格式，仅包含 value
+            return rule.message_template.format(value=metric.value)
+
+    def _process_metric_alerts(self, metric: MetricData):
+        """Evaluate alert rules that match a newly recorded metric."""
+
+        if not self.config.enable_alerting:
+            return
+
+        for rule in self.alert_rules.values():
+            if not rule.enabled:
+                continue
+            if rule.metric_name != metric.name:
+                continue
+
+            alert_key = self._build_alert_key(rule, metric)
+            should_alert = self._evaluate_condition(metric.value, rule.condition, rule.threshold)
+
+            if should_alert:
+                existing_alert = self.active_alerts.get(alert_key)
+                if existing_alert is None:
+                    alert = Alert(
+                        id=f"{alert_key}_{int(time.time())}",
+                        rule_name=rule.name,
+                        severity=rule.severity,
+                        message=self._render_alert_message(rule, metric),
+                        metric_value=metric.value,
+                        timestamp=metric.timestamp,
+                        tags=metric.tags.copy() if metric.tags else None,
+                    )
+                    self.active_alerts[alert_key] = alert
+                    self._handle_alert(alert)
+            else:
+                existing_alert = self.active_alerts.get(alert_key)
+                if existing_alert and not existing_alert.resolved:
+                    existing_alert.resolved = True
+                    existing_alert.resolved_at = datetime.now()
+                    self._handle_alert_resolution(existing_alert)
+                    del self.active_alerts[alert_key]
+
     def _handle_alert(self, alert: Alert):
         """处理告警"""
         self.logger.warning(
@@ -508,12 +651,14 @@ class PerformanceMonitor:
             f"Alert triggered: {alert.message}",
             alert_id=alert.id,
             severity=alert.severity.value,
-            metric_value=alert.metric_value
+            metric_value=alert.metric_value,
+            tags=alert.tags or {},
         )
 
         # 保存告警到文件
         alert_file = self.log_dir / "alerts" / f"alert_{alert.timestamp.strftime('%Y%m%d_%H%M%S')}.json"
         alert_data = asdict(alert)
+        alert_data = _make_serializable(alert_data)
         alert_data['timestamp'] = alert.timestamp.isoformat()
         if alert.resolved_at:
             alert_data['resolved_at'] = alert.resolved_at.isoformat()
@@ -527,7 +672,8 @@ class PerformanceMonitor:
             LogCategory.PERFORMANCE,
             f"Alert resolved: {alert.message}",
             alert_id=alert.id,
-            duration_minutes=(alert.resolved_at - alert.timestamp).total_seconds() / 60
+            duration_minutes=(alert.resolved_at - alert.timestamp).total_seconds() / 60,
+            tags=alert.tags or {},
         )
 
     def record_metric(self, name: str, value: float, metric_type: MetricType = MetricType.GAUGE,
@@ -553,12 +699,61 @@ class PerformanceMonitor:
         with self._lock:
             self.metrics_history[name].append(metric_data)
 
+        self._process_metric_alerts(metric_data)
+
         # 异步保存到数据库和文件
         threading.Thread(
             target=self._save_metric_to_storage,
             args=(metric_data,),
             daemon=True
         ).start()
+
+    def record_factor_metrics(
+        self,
+        factor_name: str,
+        payload: Dict[str, float],
+        extra_tags: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
+        """Record multiple metrics for a factor in a single call."""
+
+        if not payload:
+            return
+
+        base_tags = {"factor_name": factor_name}
+        if extra_tags:
+            base_tags.update(extra_tags)
+
+        for metric_name, value in payload.items():
+            if value is None:
+                continue
+
+            normalized_name = self._normalise_factor_metric_name(metric_name)
+            template = self.factor_metric_templates.get(normalized_name)
+
+            metric_tags = base_tags.copy()
+            if template and template.default_tags:
+                metric_tags.update(template.default_tags)
+
+            unit = template.unit if template else None
+
+            combined_metadata: Optional[Dict[str, Any]] = None
+            if template and template.metadata:
+                combined_metadata = dict(template.metadata)
+                if metadata:
+                    combined_metadata.update(metadata)
+            elif metadata:
+                combined_metadata = dict(metadata)
+
+            self.record_metric(
+                name=normalized_name,
+                value=float(value),
+                metric_type=MetricType.GAUGE,
+                category=MetricCategory.FACTOR_COMPUTATION,
+                tags=metric_tags,
+                unit=unit,
+                metadata=combined_metadata,
+            )
 
     def _save_metric_to_storage(self, metric: MetricData):
         """保存指标到数据库和文件"""
@@ -674,6 +869,35 @@ class PerformanceMonitor:
             del self.alert_rules[rule_name]
             self.logger.info(LogCategory.PERFORMANCE, f"Removed alert rule: {rule_name}")
 
+    def register_factor_metric_templates(self, templates: Iterable[FactorMetricTemplate]):
+        """Register reusable templates for factor metrics."""
+
+        for template in templates:
+            metric_name = self._normalise_factor_metric_name(template.name)
+            self.factor_metric_templates[metric_name] = template
+            self.logger.info(
+                LogCategory.PERFORMANCE,
+                f"Registered factor metric template: {metric_name}",
+                template=template.name,
+            )
+
+    def register_factor_alerts(self, alerts: Iterable[FactorAlertDefinition]):
+        """Register alert rules bound to factor metrics."""
+
+        for alert in alerts:
+            metric_name = self._normalise_factor_metric_name(alert.metric)
+            rule = AlertRule(
+                name=alert.name,
+                metric_name=metric_name,
+                condition=alert.condition,
+                threshold=alert.threshold,
+                severity=alert.severity,
+                message_template=alert.message_template,
+                enabled=alert.enabled,
+                cooldown_minutes=alert.cooldown_minutes,
+            )
+            self.add_alert_rule(rule)
+
     def generate_performance_report(self, hours: int = 24) -> Dict[str, Any]:
         """生成性能报告"""
         cutoff_time = datetime.now() - timedelta(hours=hours)
@@ -752,7 +976,11 @@ class PerformanceMonitor:
     def measure_operation(self, operation_name: str, session_id: Optional[str] = None, tags: Optional[Dict[str, str]] = None):
         """操作性能测量上下文管理器"""
         start_time = time.time()
-        start_memory = psutil.Process().memory_info().rss / (1024**2)  # MB
+        start_memory = (
+            psutil.Process().memory_info().rss / (1024**2)  # MB
+            if psutil is not None
+            else 0.0
+        )
 
         try:
             yield
@@ -775,7 +1003,11 @@ class PerformanceMonitor:
         finally:
             # 计算执行时间和内存变化
             end_time = time.time()
-            end_memory = psutil.Process().memory_info().rss / (1024**2)
+            end_memory = (
+                psutil.Process().memory_info().rss / (1024**2)
+                if psutil is not None
+                else 0.0
+            )
 
             duration = end_time - start_time
             memory_delta = end_memory - start_memory
@@ -1128,6 +1360,18 @@ def record_timer(name: str, value: float,
     """记录计时器指标"""
     monitor = get_performance_monitor()
     monitor.record_metric(name, value, MetricType.TIMER, category, tags, "seconds", session_id)
+
+
+def record_factor_metrics(
+    factor_name: str,
+    payload: Dict[str, float],
+    extra_tags: Optional[Dict[str, str]] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+):
+    """Record factor performance metrics via the global monitor."""
+
+    monitor = get_performance_monitor()
+    monitor.record_factor_metrics(factor_name, payload, extra_tags=extra_tags, metadata=metadata)
 
 
 def performance_monitored(metric_name: str, tags: Optional[Dict[str, str]] = None):
