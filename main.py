@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 from typing import Iterable, Sequence
 
+from config import CombinerConfig
+
 try:  # pragma: no cover - optional dependency guard
     import pandas as pd
 except ModuleNotFoundError:  # pragma: no cover - handled via runtime error
@@ -17,6 +19,7 @@ from utils.logging import configure
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="港股因子探索系统")
+    combiner_defaults = CombinerConfig()
     parser.add_argument("--symbol", required=True, help="股票代码，如: 0700.HK")
     parser.add_argument("--phase", choices=["phase1", "phase2", "both"], default="both")
     parser.add_argument("--reset", action="store_true", help="重置数据库")
@@ -48,6 +51,30 @@ def _build_parser() -> argparse.ArgumentParser:
         "--memory-limit-mb",
         type=int,
         help="内存监控阈值，超过后输出警告信息",
+    )
+    parser.add_argument(
+        "--combiner-top-n",
+        type=int,
+        default=combiner_defaults.top_n,
+        help="阶段2中纳入多因子组合评估的顶尖单因子数量",
+    )
+    parser.add_argument(
+        "--combiner-max-factors",
+        type=int,
+        default=combiner_defaults.max_factors,
+        help="组合生成时每个策略允许的最大因子个数",
+    )
+    parser.add_argument(
+        "--combiner-min-sharpe",
+        type=float,
+        default=combiner_defaults.min_sharpe,
+        help="筛选阶段2因子及策略时所需的最低夏普比率",
+    )
+    parser.add_argument(
+        "--combiner-min-ic",
+        type=float,
+        default=combiner_defaults.min_information_coefficient,
+        help="筛选因子时所需的最小信息系数绝对值",
     )
     return parser
 
