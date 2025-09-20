@@ -3,7 +3,9 @@ import logging
 from pathlib import Path
 
 from application.configuration import AppSettings
+from application.container import ServiceContainer
 from application.services import DiscoveryOrchestrator
+from config import CombinerConfig
 
 
 class StubDatabase:
@@ -108,3 +110,47 @@ def test_orchestrator_runs_both_phases():
     assert result.phase1
     assert container.db.exploration_saved
     assert container.db.combinations_saved
+
+
+def test_service_container_passes_combiner_config(monkeypatch):
+    import sys
+    import types
+
+    captured = {}
+
+    class CaptureCombiner:
+        def __init__(self, *, symbol, phase1_results, config, data_loader):
+            captured["symbol"] = symbol
+            captured["phase1_results"] = phase1_results
+            captured["config"] = config
+            captured["data_loader"] = data_loader
+            captured["instance"] = self
+
+    combiner_module = types.ModuleType("phase2.combiner")
+    combiner_module.MultiFactorCombiner = CaptureCombiner
+    phase2_module = types.ModuleType("phase2")
+    phase2_module.combiner = combiner_module
+    monkeypatch.setitem(sys.modules, "phase2", phase2_module)
+    monkeypatch.setitem(sys.modules, "phase2.combiner", combiner_module)
+
+    settings = AppSettings(
+        symbol="0700.HK",
+        phase="phase2",
+        reset=False,
+        data_root=None,
+        db_path=Path("/tmp/test.sqlite"),
+        combiner=CombinerConfig(top_n=7, max_factors=2, min_sharpe=0.8, min_information_coefficient=0.02),
+    )
+    container = ServiceContainer(settings)
+
+    dummy_loader = object()
+    monkeypatch.setattr(container, "data_loader", lambda: dummy_loader)
+
+    phase1_results = {"demo": {"sharpe_ratio": 1.0}}
+    combiner = container.factor_combiner(phase1_results)
+
+    assert combiner is captured["instance"]
+    assert captured["symbol"] == "0700.HK"
+    assert captured["phase1_results"] is phase1_results
+    assert captured["config"] == settings.combiner
+    assert captured["data_loader"] is dummy_loader
