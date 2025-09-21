@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
 
 
 DEFAULT_TIMEFRAMES: List[str] = [
@@ -42,6 +42,7 @@ class CombinerConfig:
 
     top_n: int = 20
     max_factors: int = 3
+    max_combinations: Optional[int] = 1000
     min_sharpe: float = 0.0
     min_information_coefficient: float = 0.0
 
