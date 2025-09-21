@@ -67,6 +67,7 @@ HK0920sen-code/
    - `--phase phase1|phase2|both` 控制执行阶段，默认 `both`。
    - `--reset` 会清空 SQLite 数据库重新探索。
    - `--log-level` 指定日志级别；亦可通过环境变量 `HK_DISCOVERY_LOG_LEVEL` 配置。
+   - `--enable-monitoring` 可启用性能监控，`--monitor-log-dir` 与 `--monitor-db-path` 用于覆盖监控日志/数据库目录；同名环境变量 `HK_DISCOVERY_MONITORING_ENABLED`、`HK_DISCOVERY_MONITOR_LOG_DIR`、`HK_DISCOVERY_MONITOR_DB_PATH` 亦可独立配置。
    - `HK_DISCOVERY_DB`、`HK_DISCOVERY_CACHE_TTL` 等环境变量可覆盖数据库位置与缓存策略。
 
 ## 编程接口

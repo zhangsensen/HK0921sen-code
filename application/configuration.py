@@ -8,6 +8,7 @@ from typing import Callable, Optional, TypeVar
 
 from config import CombinerConfig
 from utils.validation import validate_symbol
+from utils.monitoring import MonitorConfig
 
 
 Numeric = TypeVar("Numeric", int, float)
@@ -29,6 +30,15 @@ class AppSettings:
     max_workers: Optional[int] = None
     memory_limit_mb: Optional[int] = None
     combiner: CombinerConfig = field(default_factory=CombinerConfig)
+    monitoring: Optional[MonitorConfig] = None
+
+    @staticmethod
+    def _to_bool(value: object, default: bool = False) -> bool:
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return value
+        return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
     @classmethod
     def from_cli_args(cls, args: object) -> "AppSettings":
@@ -53,6 +63,36 @@ class AppSettings:
             if memory_limit_arg is not None
             else (int(memory_limit_env) if memory_limit_env else None)
         )
+
+        monitoring_enabled_arg = getattr(args, "enable_monitoring", False)
+        monitoring_enabled_env = cls._to_bool(os.environ.get("HK_DISCOVERY_MONITORING_ENABLED"))
+        monitoring_enabled = cls._to_bool(monitoring_enabled_arg) or monitoring_enabled_env
+
+        monitor_log_dir_arg = getattr(args, "monitor_log_dir", None)
+        monitor_db_path_arg = getattr(args, "monitor_db_path", None)
+        monitor_log_dir_env = os.environ.get("HK_DISCOVERY_MONITOR_LOG_DIR")
+        monitor_db_path_env = os.environ.get("HK_DISCOVERY_MONITOR_DB_PATH")
+
+        monitor_log_dir_value = monitor_log_dir_arg or monitor_log_dir_env
+        monitor_db_path_value = monitor_db_path_arg or monitor_db_path_env
+
+        monitoring_requested = bool(
+            monitoring_enabled
+            or monitor_log_dir_value
+            or monitor_db_path_value
+        )
+
+        monitoring_config: Optional[MonitorConfig]
+        if monitoring_requested:
+            resolved_log_dir = Path(monitor_log_dir_value or "logs/performance").expanduser()
+            resolved_db_path = Path(monitor_db_path_value or "monitoring/performance.db").expanduser()
+            monitoring_config = MonitorConfig(
+                enabled=monitoring_enabled,
+                log_dir=str(resolved_log_dir),
+                database_path=str(resolved_db_path),
+            )
+        else:
+            monitoring_config = None
 
         combiner_defaults = CombinerConfig()
 
@@ -107,6 +147,7 @@ class AppSettings:
             max_workers=max_workers,
             memory_limit_mb=memory_limit,
             combiner=combiner_config,
+            monitoring=monitoring_config,
         )
 
 

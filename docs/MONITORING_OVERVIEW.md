@@ -18,6 +18,23 @@ monitor = PerformanceMonitor(config)
 - Directories referenced in the config are created automatically.
 - The monitor collects system snapshots (CPU, memory, disk, network) and stores them in SQLite + JSON files.
 
+## Enabling Monitoring in the CLI Workflow
+
+The discovery CLI can now bootstrap a `PerformanceMonitor` directly via command-line flags or environment variables. Pass `--enable-monitoring` when invoking `python -m main` to turn on background collection:
+
+```bash
+python -m main \
+    --symbol 0700.HK \
+    --phase both \
+    --enable-monitoring \
+    --monitor-log-dir runtime/logs \
+    --monitor-db-path runtime/monitoring/performance.db
+```
+
+- `--monitor-log-dir` and `--monitor-db-path` override the log and SQLite locations respectively.
+- The same values can be supplied via environment variables `HK_DISCOVERY_MONITORING_ENABLED`, `HK_DISCOVERY_MONITOR_LOG_DIR` and `HK_DISCOVERY_MONITOR_DB_PATH`.
+- When enabled, `DiscoveryOrchestrator` wraps phase 1 and phase 2 execution with `measure_operation`, generating duration/error counters (`discovery_phase1_duration`, `discovery_phase2_duration`, etc.) and summary gauges (`discovery_phase1_result_count`, `discovery_phase2_result_count`).
+
 ## Recording Custom Metrics
 
 ```python
@@ -147,5 +164,5 @@ factor KPIs:
 ## Integration Tips
 
 - Initialise a single `PerformanceMonitor` and reuse it through dependency injection (`ServiceContainer.logger()` is a good reference pattern).
-- Use environment variables (`HK_DISCOVERY_MONITOR_DIR`, etc.) to override defaults for staging/production deployments.
+- Use the `HK_DISCOVERY_MONITORING_ENABLED`, `HK_DISCOVERY_MONITOR_LOG_DIR` and `HK_DISCOVERY_MONITOR_DB_PATH` environment variables to override defaults for staging/production deployments.
 - Combine metrics with the structured logging helpers in `utils.enhanced_logging` to produce consistent audits and performance dashboards.
