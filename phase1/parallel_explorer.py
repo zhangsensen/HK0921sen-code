@@ -121,6 +121,18 @@ class ParallelFactorExplorer:
         self._process_pool_supported = True
 
     # ------------------------------------------------------------------
+    def _preload_timeframes(self) -> None:
+        """Warm up the data loader cache when supported."""
+
+        preload = getattr(self.data_loader, "preload_timeframes", None)
+        if not callable(preload):
+            return
+        try:
+            preload(self.symbol, self.timeframes)
+        except Exception as exc:  # pragma: no cover - graceful degradation
+            self.logger.debug("预加载时间框失败: %s", exc)
+
+    # ------------------------------------------------------------------
     def _log_progress(self, completed: int, total: int) -> None:
         if total <= 0:
             return
@@ -159,6 +171,8 @@ class ParallelFactorExplorer:
         results: Dict[str, Dict[str, Any]] = {}
         total = len(self.timeframes) * len(self.factors)
         completed = 0
+
+        self._preload_timeframes()
 
         for timeframe in self.timeframes:
             data = self.data_loader.load(self.symbol, timeframe)

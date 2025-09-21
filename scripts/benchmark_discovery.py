@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Optional, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -30,6 +30,9 @@ class RunResult:
     duration: float
     success: bool
     error: str | None = None
+    cpu_time: float | None = None
+    start_memory_mb: float | None = None
+    end_memory_mb: float | None = None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -83,6 +86,58 @@ def _average(values: Iterable[float]) -> float | None:
     return statistics.mean(data)
 
 
+def _memory_usage_mb() -> float | None:
+    """Return current RSS in megabytes when possible."""
+
+    try:
+        import psutil  # type: ignore
+    except ModuleNotFoundError:  # pragma: no cover - optional dependency
+        psutil = None  # type: ignore[assignment]
+    if psutil is not None:
+        try:
+            return psutil.Process().memory_info().rss / (1024 * 1024)
+        except Exception:  # pragma: no cover - defensive guard
+            pass
+
+    try:
+        import resource  # type: ignore
+    except ModuleNotFoundError:  # pragma: no cover - optional dependency
+        return None
+    except Exception:  # pragma: no cover - defensive guard
+        return None
+
+    try:
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    except Exception:  # pragma: no cover - defensive guard
+        return None
+    if sys.platform == "darwin":
+        return usage / (1024 * 1024)
+    return usage / 1024
+
+
+def _peak_memory_value(start: float | None, end: float | None) -> float | None:
+    values = [value for value in (start, end) if value is not None]
+    return max(values) if values else None
+
+
+def _format_run_resources(
+    cpu_time: float | None, start_memory: float | None, end_memory: float | None
+) -> str:
+    parts: List[str] = []
+    if cpu_time is not None:
+        parts.append(f"CPU {cpu_time:.2f}s")
+    peak = _peak_memory_value(start_memory, end_memory)
+    if peak is not None:
+        if start_memory is not None and end_memory is not None:
+            delta = end_memory - start_memory
+            parts.append(f"RSS {peak:.1f}MB (Δ {delta:+.1f}MB)")
+        else:
+            parts.append(f"RSS {peak:.1f}MB")
+    if not parts:
+        return ""
+    return " (" + ", ".join(parts) + ")"
+
+
 def _format_seconds(value: float | None) -> str:
     """Format seconds with a two-decimal representation."""
 
@@ -108,19 +163,46 @@ def _run_samples(
     for index in range(1, samples + 1):
         orchestrator = DiscoveryOrchestrator(settings, container)
         start = time.perf_counter()
+        start_cpu = time.process_time()
+        start_memory = _memory_usage_mb()
         try:
             orchestrator.run()
         except Exception as exc:  # pragma: no cover - surfaced to CLI output
             duration = time.perf_counter() - start
+            cpu_time = time.process_time() - start_cpu
+            end_memory = _memory_usage_mb()
             message = str(exc)
-            results.append(RunResult(index=index, duration=duration, success=False, error=message))
-            print(f"[{index}/{samples}] ❌ Failure after {duration:.2f}s: {message}")
+            results.append(
+                RunResult(
+                    index=index,
+                    duration=duration,
+                    success=False,
+                    error=message,
+                    cpu_time=cpu_time,
+                    start_memory_mb=start_memory,
+                    end_memory_mb=end_memory,
+                )
+            )
+            resources = _format_run_resources(cpu_time, start_memory, end_memory)
+            print(f"[{index}/{samples}] ❌ Failure after {duration:.2f}s{resources}: {message}")
             if fail_fast:
                 break
         else:
             duration = time.perf_counter() - start
-            results.append(RunResult(index=index, duration=duration, success=True))
-            print(f"[{index}/{samples}] ✅ Completed in {duration:.2f}s")
+            cpu_time = time.process_time() - start_cpu
+            end_memory = _memory_usage_mb()
+            results.append(
+                RunResult(
+                    index=index,
+                    duration=duration,
+                    success=True,
+                    cpu_time=cpu_time,
+                    start_memory_mb=start_memory,
+                    end_memory_mb=end_memory,
+                )
+            )
+            resources = _format_run_resources(cpu_time, start_memory, end_memory)
+            print(f"[{index}/{samples}] ✅ Completed in {duration:.2f}s{resources}")
     return results
 
 
@@ -142,6 +224,35 @@ def _summarise_runs(results: Sequence[RunResult]) -> None:
         print(f"Average duration (all runs): {_format_seconds(avg_all)}")
     if avg_success is not None:
         print(f"Average duration (successful runs): {_format_seconds(avg_success)}")
+
+    cpu_avg = _average(result.cpu_time for result in results if result.cpu_time is not None)
+    if cpu_avg is not None:
+        print(f"Average CPU time (per run): {cpu_avg:.2f}s")
+
+    peaks = [
+        peak
+        for peak in (
+            _peak_memory_value(result.start_memory_mb, result.end_memory_mb) for result in results
+        )
+        if peak is not None
+    ]
+    if peaks:
+        peak_avg = _average(peaks)
+        if peak_avg is not None:
+            print(f"Average peak RSS: {peak_avg:.1f}MB (max {max(peaks):.1f}MB)")
+
+    deltas = [
+        result.end_memory_mb - result.start_memory_mb
+        for result in results
+        if result.start_memory_mb is not None and result.end_memory_mb is not None
+    ]
+    if deltas:
+        delta_avg = _average(deltas)
+        if delta_avg is not None:
+            print(
+                "Average RSS delta: "
+                f"{delta_avg:+.1f}MB (max {max(deltas):+.1f}MB, min {min(deltas):+.1f}MB)"
+            )
 
     failures = [result for result in results if not result.success and result.error]
     if failures:

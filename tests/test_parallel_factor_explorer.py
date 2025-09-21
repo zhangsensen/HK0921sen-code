@@ -1,8 +1,11 @@
 import logging
 import os
+from collections import defaultdict
 
 import pytest
 
+from config import TIMEFRAME_TO_PANDAS_RULE
+from data_loader_optimized import OptimizedDataLoader
 from phase1.parallel_explorer import ParallelFactorExplorer
 from utils.factor_cache import FactorCache
 
@@ -51,6 +54,59 @@ class DummyEngine:
 
 def dummy_engine_factory(symbol: str):
     return DummyEngine(symbol)
+
+
+class RollingWindowFactor:
+    """Factor stub that transforms price data into float signals."""
+
+    def __init__(self, name: str, offset: float = 0.0) -> None:
+        self.name = name
+        self.category = "integration"
+        self._offset = float(offset)
+
+    def generate_signals(self, symbol: str, timeframe: str, data):
+        closes = data["close"].tolist()
+        return [float(value) + self._offset for value in closes]
+
+
+def _cumulative(values):
+    total = 0.0
+    curve = []
+    for value in values:
+        total += float(value)
+        curve.append(total)
+    return curve
+
+
+class IntegrationEngine:
+    """Lightweight engine producing deterministic performance metrics."""
+
+    def __init__(self, symbol: str):
+        self.symbol = symbol
+
+    def backtest_factor(self, data, signals):
+        trades = len(signals)
+        mean_value = sum(signals) / trades if trades else 0.0
+        variance = (
+            sum((value - mean_value) ** 2 for value in signals) / trades if trades else 0.0
+        )
+        sharpe = mean_value / (variance ** 0.5 + 1e-9) if variance else 0.0
+        return {
+            "returns": list(signals),
+            "equity_curve": _cumulative(signals),
+            "sharpe_ratio": sharpe,
+            "stability": 0.5,
+            "trades_count": trades,
+            "win_rate": 0.55,
+            "profit_factor": 1.05,
+            "max_drawdown": max(signals) - min(signals) if trades else 0.0,
+            "information_coefficient": 0.1,
+            "process_id": os.getpid(),
+        }
+
+
+def integration_engine_factory(symbol: str) -> IntegrationEngine:
+    return IntegrationEngine(symbol)
 
 
 @pytest.fixture
@@ -108,3 +164,93 @@ def test_parallel_explorer_uses_cache(loader):
     second = explorer.explore_all_factors()
     assert first == second
     assert explorer.cache_stats["hits"] >= 1
+
+
+def test_parallel_explorer_preloads_and_hits_disk(tmp_path, caplog, monkeypatch):
+    pd = pytest.importorskip("pandas")
+    pd_testing = pytest.importorskip("pandas.testing")
+
+    symbols = ["0700.HK", "0005.HK", "0388.HK"]
+    timeframes = ["1m", "5m", "15m"]
+    dataset = {}
+    for symbol in symbols:
+        symbol_data = {}
+        for timeframe in timeframes:
+            freq = TIMEFRAME_TO_PANDAS_RULE[timeframe]
+            periods = 240 if timeframe.endswith("m") else 64
+            base = 90 + (abs(hash((symbol, timeframe))) % 25)
+            index = pd.date_range("2024-01-01 09:30", periods=periods, freq=freq)
+            close = [base + step * 0.2 for step in range(periods)]
+            frame = pd.DataFrame(
+                {
+                    "open": [value - 0.1 for value in close],
+                    "high": [value + 0.2 for value in close],
+                    "low": [value - 0.3 for value in close],
+                    "close": close,
+                    "volume": [10_000 + step for step in range(periods)],
+                },
+                index=index,
+            )
+            symbol_data[timeframe] = frame
+        dataset[symbol] = symbol_data
+
+    provider_calls = defaultdict(int)
+
+    def provider(symbol: str, timeframe: str):
+        provider_calls[(symbol, timeframe)] += 1
+        return dataset[symbol][timeframe].copy()
+
+    cache_dir = tmp_path / "optimized_cache"
+    loader = OptimizedDataLoader(data_provider=provider, cache_dir=cache_dir, max_workers=4)
+    cache = FactorCache()
+    factors = [
+        RollingWindowFactor("offset0", 0.0),
+        RollingWindowFactor("offset1", 1.0),
+        RollingWindowFactor("offset2", 2.0),
+    ]
+    logger = logging.getLogger("test.parallel.integration")
+    logger.handlers.clear()
+    logger.setLevel(logging.DEBUG)
+    caplog.set_level(logging.DEBUG, logger=logger.name)
+    monkeypatch.setattr("phase1.parallel_explorer._current_memory_mb", lambda: 512.0)
+
+    explorer = ParallelFactorExplorer(
+        symbols[0],
+        timeframes=timeframes,
+        factors=factors,
+        data_loader=loader,
+        factor_cache=cache,
+        backtest_engine_factory=integration_engine_factory,
+        max_workers=2,
+        memory_limit_mb=64,
+        logger=logger,
+    )
+
+    results = explorer.explore_all_factors()
+    expected_keys = {f"{timeframe}_{factor.name}" for timeframe in timeframes for factor in factors}
+    assert set(results) == expected_keys
+
+    stats = loader.stats()
+    assert stats["preload_hits"] == len(timeframes)
+    assert stats["preload_misses"] == 0
+    assert stats["disk_writes"] >= len(timeframes)
+    for timeframe in timeframes:
+        assert provider_calls[(symbols[0], timeframe)] == 1
+
+    warning_records = [record for record in caplog.records if "内存使用" in record.message]
+    assert warning_records, "memory pressure warning should be logged"
+
+    process_ids = {value["process_id"] for value in results.values()}
+    if explorer.process_pool_available:
+        assert any(pid != MAIN_PID for pid in process_ids)
+
+    def disk_only_provider(*_args, **_kwargs):
+        raise AssertionError("disk cache should satisfy the second loader")
+
+    disk_loader = OptimizedDataLoader(data_provider=disk_only_provider, cache_dir=cache_dir, preload=False)
+    for timeframe in timeframes:
+        cached = disk_loader.load(symbols[0], timeframe)
+        pd_testing.assert_frame_equal(cached, dataset[symbols[0]][timeframe], check_freq=False)
+
+    disk_stats = disk_loader.stats()
+    assert disk_stats["disk_hits"] == len(timeframes)
