@@ -55,6 +55,7 @@ HK0920sen-code/
    - 将 `1m`、`2m`、`3m`、`5m`、`1d` 的 OHLCV Parquet/CSV 数据放在 `symbol/timeframe.parquet` 或 `timeframe/symbol.parquet` 结构下，二者皆受支持。
    - 若使用 CSV，请包含可解析为时间索引的 `timestamp`（或 `datetime`/`date`）列，并提供 `open`、`high`、`low`、`close`、`volume` 字段。
    - 其余时间框架（10m、15m、30m、1h、2h、4h）由 `HistoricalDataLoader` 自动进行向量化重采样，无需额外文件。
+   - 仓库在 `tests/e2e/data/` 下提供了一个涵盖多时间框架的迷你样本，可直接用于本地或 CI 冒烟测试。
 
 3. **运行命令行入口**
    ```bash
@@ -97,6 +98,16 @@ pytest
 ```
 
 若环境暂时未安装 `pandas` 或 `numpy`，探索相关的测试会自动跳过；其余针对配置、容器与安全性的用例仍会执行，确保核心工程逻辑稳定。建议在准备好全部依赖后完整运行一次以验证因子池与组合逻辑。
+
+### 端到端冒烟测试（慢速分组）
+
+`tests/e2e/test_cli_smoke.py` 会通过 `subprocess` 调用 `python -m main --phase both --enable-monitoring`，并对 SQLite 数据库与监控指标进行断言。该用例被标记为 `slow`，默认不会在常规 `pytest` 中执行，可通过下列命令运行：
+
+```bash
+python scripts/ci_slow.py  # 等价于 pytest -m slow
+```
+
+CI 可复用该脚本，也可以直接执行 `pytest -m slow` 将冒烟任务归入慢速分组。
 
 ## 文档
 

@@ -34,6 +34,7 @@ python -m main \
 - `--monitor-log-dir` and `--monitor-db-path` override the log and SQLite locations respectively.
 - The same values can be supplied via environment variables `HK_DISCOVERY_MONITORING_ENABLED`, `HK_DISCOVERY_MONITOR_LOG_DIR` and `HK_DISCOVERY_MONITOR_DB_PATH`.
 - When enabled, `DiscoveryOrchestrator` wraps phase 1 and phase 2 execution with `measure_operation`, generating duration/error counters (`discovery_phase1_duration`, `discovery_phase2_duration`, etc.) and summary gauges (`discovery_phase1_result_count`, `discovery_phase2_result_count`).
+- A ready-made smoke test in `tests/e2e/test_cli_smoke.py` exercises this flow end-to-end, asserting both SQLite row counts and the presence of the duration metrics in the monitoring database/JSON artefacts.
 
 ## Recording Custom Metrics
 
