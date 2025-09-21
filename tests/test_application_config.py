@@ -1,22 +1,34 @@
-from argparse import Namespace
 from pathlib import Path
 
 from application.configuration import AppSettings
+from config import CombinerConfig
 from main import _build_parser
 
 
-def test_app_settings_from_cli_args(tmp_path, monkeypatch):
-    args = Namespace(
-        symbol="0700.HK",
-        phase="both",
-        reset=True,
-        data_root=str(tmp_path),
-        db_path=str(tmp_path / "db.sqlite"),
-        log_level="DEBUG",
-        combiner_top_n=15,
-        combiner_max_factors=5,
-        combiner_min_sharpe=1.1,
-        combiner_min_ic=0.07,
+def test_app_settings_from_cli_args(tmp_path):
+    parser = _build_parser()
+    args = parser.parse_args(
+        [
+            "--symbol",
+            "0700.HK",
+            "--phase",
+            "both",
+            "--reset",
+            "--data-root",
+            str(tmp_path),
+            "--db-path",
+            str(tmp_path / "db.sqlite"),
+            "--log-level",
+            "DEBUG",
+            "--combiner-top-n",
+            "15",
+            "--combiner-max-factors",
+            "5",
+            "--combiner-min-sharpe",
+            "1.1",
+            "--combiner-min-ic",
+            "0.07",
+        ]
     )
     settings = AppSettings.from_cli_args(args)
     assert settings.symbol == "0700.HK"
@@ -50,27 +62,62 @@ def test_app_settings_cli_overrides_combiner_env(monkeypatch, tmp_path):
     monkeypatch.setenv("HK_DISCOVERY_COMBINER_MAX_FACTORS", "3")
     monkeypatch.setenv("HK_DISCOVERY_COMBINER_MIN_SHARPE", "0.5")
     monkeypatch.setenv("HK_DISCOVERY_COMBINER_MIN_IC", "0.02")
+    defaults = CombinerConfig()
+    parser = _build_parser()
+    base_cli = [
+        "--symbol",
+        "0700.HK",
+        "--phase",
+        "phase2",
+        "--data-root",
+        str(tmp_path / "data"),
+        "--db-path",
+        str(tmp_path / "db.sqlite"),
+        "--log-level",
+        "WARNING",
+    ]
 
-    args = Namespace(
-        symbol="0700.HK",
-        phase="phase2",
-        reset=False,
-        data_root=str(tmp_path / "data"),
-        db_path=str(tmp_path / "db.sqlite"),
-        log_level="WARNING",
-        combiner_top_n=25,
-        combiner_max_factors=6,
-        combiner_min_sharpe=1.2,
-        combiner_min_ic=0.11,
+    args_default = parser.parse_args(
+        base_cli
+        + [
+            "--combiner-top-n",
+            str(defaults.top_n),
+            "--combiner-max-factors",
+            str(defaults.max_factors),
+            "--combiner-min-sharpe",
+            str(defaults.min_sharpe),
+            "--combiner-min-ic",
+            str(defaults.min_information_coefficient),
+        ]
     )
-    setattr(args, "_combiner_top_n_provided", True)
-    setattr(args, "_combiner_max_factors_provided", True)
-    setattr(args, "_combiner_min_sharpe_provided", True)
-    setattr(args, "_combiner_min_ic_provided", True)
 
-    settings = AppSettings.from_cli_args(args)
+    settings_default = AppSettings.from_cli_args(args_default)
 
-    assert settings.combiner.top_n == 25
-    assert settings.combiner.max_factors == 6
-    assert settings.combiner.min_sharpe == 1.2
-    assert settings.combiner.min_information_coefficient == 0.11
+    assert settings_default.combiner.top_n == defaults.top_n
+    assert settings_default.combiner.max_factors == defaults.max_factors
+    assert settings_default.combiner.min_sharpe == defaults.min_sharpe
+    assert (
+        settings_default.combiner.min_information_coefficient
+        == defaults.min_information_coefficient
+    )
+
+    args_custom = parser.parse_args(
+        base_cli
+        + [
+            "--combiner-top-n",
+            "25",
+            "--combiner-max-factors",
+            "6",
+            "--combiner-min-sharpe",
+            "1.2",
+            "--combiner-min-ic",
+            "0.11",
+        ]
+    )
+
+    settings_custom = AppSettings.from_cli_args(args_custom)
+
+    assert settings_custom.combiner.top_n == 25
+    assert settings_custom.combiner.max_factors == 6
+    assert settings_custom.combiner.min_sharpe == 1.2
+    assert settings_custom.combiner.min_information_coefficient == 0.11

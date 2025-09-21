@@ -261,4 +261,6 @@ def test_service_container_supports_combiner_config_alias(monkeypatch):
     assert combiner is captured["instance"]
     assert captured["symbol"] == "0700.HK"
     assert captured["phase1_results"] is phase1_results
+    assert hasattr(container.settings, "combiner")
+    assert captured["config"] == container.settings.combiner
     assert captured["config"] == container.settings.combiner_config
