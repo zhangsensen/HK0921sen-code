@@ -109,6 +109,16 @@ python scripts/ci_slow.py  # 等价于 pytest -m slow
 
 CI 可复用该脚本，也可以直接执行 `pytest -m slow` 将冒烟任务归入慢速分组。
 
+## 性能监控与基准
+
+- `python scripts/benchmark_discovery.py` 会在启用 `PerformanceMonitor` 的前提下重复运行阶段一/二，默认采集 3 次样本，并将
+  `MetricCategory.OPERATION` 指标导出到 `runtime/benchmark/exports/`（JSON 必定生成，CSV 依赖 `pandas`）。
+- CLI 输出包含每次执行耗时、总体成功率以及阶段级别的平均耗时。导出的 JSON/CSV 可以配合 `pandas` 做进一步分析，重点关注
+  `discovery_phase1_duration` 和 `discovery_phase2_duration` 指标。
+- 推荐在每周的 CI 定时任务或发布前的性能回归检查中运行该脚本一次，使用仓库附带的迷你样本数据集衡量波动。
+- 目标阈值：成功率保持 100%，`discovery_phase1_duration` 均值不高于 90 秒、`discovery_phase2_duration` 均值不高于 30 秒
+  （如超过基线 20% 需记录告警并排查）。
+
 ## 文档
 
 - [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) 概述模块职责与目录划分

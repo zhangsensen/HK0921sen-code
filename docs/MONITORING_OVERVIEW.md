@@ -137,6 +137,51 @@ monitor.export_metrics(
 )
 ```
 
+## Benchmarking the Discovery Workflow
+
+`scripts/benchmark_discovery.py` automates repeated phase 1/2 runs, keeps monitoring
+enabled via `ServiceContainer`, and exports the collected metrics in both JSON and
+CSV (when `pandas` is available).
+
+```bash
+python scripts/benchmark_discovery.py \
+    --symbol 0700.HK \
+    --data-root /path/to/data_root \
+    --samples 5 \
+    --export-dir runtime/benchmark/exports
+```
+
+- Monitoring artefacts are written under `runtime/benchmark/logs/` and the SQLite
+  store lives at `runtime/benchmark/monitoring/performance.db` by default.
+- The CLI prints per-run timings, the overall success rate, and average durations
+  for both phases derived from `MetricCategory.OPERATION` metrics.
+- Use the exported JSON/CSV files to inspect historical trendlines. For example:
+
+  ```python
+  import pandas as pd
+
+  from pathlib import Path
+
+  export_dir = Path("runtime/benchmark/exports")
+  latest_csv = max(export_dir.glob("metrics_export_*.csv"), default=None)
+  if latest_csv is not None:
+      df = pd.read_csv(latest_csv)
+      phase1 = df[(df["name"] == "discovery_phase1_duration") & (df["tags"].str.contains("phase\": \"phase1\""))]
+      print(phase1["value"].describe())
+  ```
+
+- CSV export uses `pandas`; if the dependency is missing the script still writes
+  the JSON file and surfaces a warning on stdout.
+
+When analysing the results focus on:
+
+1. The `success_rate` printed by the CLI – anything below 100% requires
+   investigation before the next deployment.
+2. `discovery_phase1_duration` and `discovery_phase2_duration` metrics – they
+   should remain close to the baseline recorded on the bundled mini dataset. A
+   sustained increase of more than 20% across multiple samples is a regression
+   worth flagging in CI.
+
 ## Cleaning Up
 
 At runtime the monitor creates the following tree by default:
