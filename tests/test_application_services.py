@@ -154,3 +154,59 @@ def test_service_container_passes_combiner_config(monkeypatch):
     assert captured["phase1_results"] is phase1_results
     assert captured["config"] == settings.combiner
     assert captured["data_loader"] is dummy_loader
+
+
+def test_service_container_supports_combiner_config_alias(monkeypatch):
+    import sys
+    import types
+
+    captured = {}
+
+    class CaptureCombiner:
+        def __init__(self, *, symbol, phase1_results, config, data_loader):
+            captured["symbol"] = symbol
+            captured["phase1_results"] = phase1_results
+            captured["config"] = config
+            captured["data_loader"] = data_loader
+            captured["instance"] = self
+
+    combiner_module = types.ModuleType("phase2.combiner")
+    combiner_module.MultiFactorCombiner = CaptureCombiner
+    phase2_module = types.ModuleType("phase2")
+    phase2_module.combiner = combiner_module
+    monkeypatch.setitem(sys.modules, "phase2", phase2_module)
+    monkeypatch.setitem(sys.modules, "phase2.combiner", combiner_module)
+
+    class LegacySettings:
+        def __init__(self) -> None:
+            self.symbol = "0700.HK"
+            self.phase = "phase2"
+            self.reset = False
+            self.data_root = None
+            self.db_path = Path("/tmp/test.sqlite")
+            self.log_level = "INFO"
+            self.cache_ttl = 300
+            self.async_batch_size = 8
+            self.parallel_mode = "off"
+            self.max_workers = None
+            self.memory_limit_mb = None
+            self.combiner_config = CombinerConfig(
+                top_n=5,
+                max_factors=2,
+                min_sharpe=0.7,
+                min_information_coefficient=0.01,
+            )
+
+    container = ServiceContainer(LegacySettings())
+
+    dummy_loader = object()
+    monkeypatch.setattr(container, "data_loader", lambda: dummy_loader)
+
+    phase1_results = {"demo": {"sharpe_ratio": 1.0}}
+    combiner = container.factor_combiner(phase1_results)
+
+    assert combiner is captured["instance"]
+    assert captured["symbol"] == "0700.HK"
+    assert captured["phase1_results"] is phase1_results
+    assert captured["config"] == container.settings.combiner_config
+    assert captured["data_loader"] is dummy_loader

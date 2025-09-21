@@ -124,10 +124,14 @@ class ServiceContainer:
     def factor_combiner(self, phase1_results: Dict[str, Dict[str, object]]) -> "MultiFactorCombiner":
         from phase2.combiner import MultiFactorCombiner as CombinerType
 
+        combiner_config = getattr(self.settings, "combiner", None)
+        if combiner_config is None:
+            combiner_config = getattr(self.settings, "combiner_config", None)
+
         return CombinerType(
             symbol=self.settings.symbol,
             phase1_results=phase1_results,
-            config=self.settings.combiner,
+            config=combiner_config,
             data_loader=self.data_loader(),
         )
 
