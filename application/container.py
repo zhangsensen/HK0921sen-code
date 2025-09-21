@@ -124,14 +124,35 @@ class ServiceContainer:
     def factor_combiner(self, phase1_results: Dict[str, Dict[str, object]]) -> "MultiFactorCombiner":
         from phase2.combiner import MultiFactorCombiner as CombinerType
 
-        combiner_config = getattr(self.settings, "combiner", None)
-        if combiner_config is None:
+        try:
+            combiner_config = self.settings.combiner
+        except AttributeError:
             combiner_config = getattr(self.settings, "combiner_config", None)
+            try:
+                setattr(self.settings, "combiner", combiner_config)
+            except (AttributeError, TypeError):
+                return CombinerType(
+                    symbol=self.settings.symbol,
+                    phase1_results=phase1_results,
+                    config=combiner_config,
+                )
+        else:
+            if combiner_config is None:
+                legacy_config = getattr(self.settings, "combiner_config", None)
+                if legacy_config is not None:
+                    try:
+                        setattr(self.settings, "combiner", legacy_config)
+                    except (AttributeError, TypeError):
+                        return CombinerType(
+                            symbol=self.settings.symbol,
+                            phase1_results=phase1_results,
+                            config=legacy_config,
+                        )
 
         return CombinerType(
             symbol=self.settings.symbol,
             phase1_results=phase1_results,
-            config=combiner_config,
+            config=self.settings.combiner,
         )
 
     def logger(self):

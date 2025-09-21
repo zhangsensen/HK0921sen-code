@@ -4,10 +4,13 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional, TypeVar
 
 from config import CombinerConfig
 from utils.validation import validate_symbol
+
+
+Numeric = TypeVar("Numeric", int, float)
 
 
 @dataclass(frozen=True)
@@ -53,7 +56,12 @@ class AppSettings:
 
         combiner_defaults = CombinerConfig()
 
-        def resolve_combiner_value(arg_name: str, env_name: str, caster, default):
+        def resolve_combiner_value(
+            arg_name: str,
+            env_name: str,
+            caster: Callable[[object], Numeric],
+            default: Numeric,
+        ) -> Numeric:
             arg_value = getattr(args, arg_name, None)
             provided_flag = getattr(args, f"_{arg_name}_provided", False)
             has_attribute = hasattr(args, arg_name)
@@ -64,29 +72,27 @@ class AppSettings:
                 return caster(env_value)
             return default
 
-        combiner_config = CombinerConfig(
-            top_n=resolve_combiner_value(
-                "combiner_top_n", "HK_DISCOVERY_COMBINER_TOP_N", int, combiner_defaults.top_n
-            ),
-            max_factors=resolve_combiner_value(
-                "combiner_max_factors",
-                "HK_DISCOVERY_COMBINER_MAX_FACTORS",
-                int,
-                combiner_defaults.max_factors,
-            ),
-            min_sharpe=resolve_combiner_value(
-                "combiner_min_sharpe",
-                "HK_DISCOVERY_COMBINER_MIN_SHARPE",
-                float,
-                combiner_defaults.min_sharpe,
-            ),
-            min_information_coefficient=resolve_combiner_value(
+        combiner_kwargs = {}
+        for arg_name, env_name, caster, field_name in [
+            ("combiner_top_n", "HK_DISCOVERY_COMBINER_TOP_N", int, "top_n"),
+            ("combiner_max_factors", "HK_DISCOVERY_COMBINER_MAX_FACTORS", int, "max_factors"),
+            ("combiner_min_sharpe", "HK_DISCOVERY_COMBINER_MIN_SHARPE", float, "min_sharpe"),
+            (
                 "combiner_min_ic",
                 "HK_DISCOVERY_COMBINER_MIN_IC",
                 float,
-                combiner_defaults.min_information_coefficient,
+                "min_information_coefficient",
             ),
-        )
+        ]:
+            default_value = getattr(combiner_defaults, field_name)
+            combiner_kwargs[field_name] = resolve_combiner_value(
+                arg_name,
+                env_name,
+                caster,
+                default_value,
+            )
+
+        combiner_config = CombinerConfig(**combiner_kwargs)
 
         return cls(
             symbol=symbol,

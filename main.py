@@ -85,7 +85,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=combiner_defaults.top_n,
         help_text=(
             "阶段2中纳入多因子组合评估的顶尖单因子数量"
-            f"（默认: {combiner_defaults.top_n}）"
+            f"（默认: {combiner_defaults.top_n}；"
+            "可通过环境变量 HK_DISCOVERY_COMBINER_TOP_N 配置）"
         ),
     )
     _add_combiner_option(
@@ -95,7 +96,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=combiner_defaults.max_factors,
         help_text=(
             "组合生成时每个策略允许的最大因子个数"
-            f"（默认: {combiner_defaults.max_factors}）"
+            f"（默认: {combiner_defaults.max_factors}；"
+            "可通过环境变量 HK_DISCOVERY_COMBINER_MAX_FACTORS 配置）"
         ),
     )
     _add_combiner_option(
@@ -105,7 +107,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=combiner_defaults.min_sharpe,
         help_text=(
             "筛选阶段2因子及策略时所需的最低夏普比率"
-            f"（默认: {combiner_defaults.min_sharpe}）"
+            f"（默认: {combiner_defaults.min_sharpe}；"
+            "可通过环境变量 HK_DISCOVERY_COMBINER_MIN_SHARPE 配置）"
         ),
     )
     _add_combiner_option(
@@ -115,7 +118,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default=combiner_defaults.min_information_coefficient,
         help_text=(
             "筛选因子时所需的最小信息系数绝对值"
-            f"（默认: {combiner_defaults.min_information_coefficient}）"
+            f"（默认: {combiner_defaults.min_information_coefficient}；"
+            "可通过环境变量 HK_DISCOVERY_COMBINER_MIN_IC 配置）"
         ),
     )
     return parser
