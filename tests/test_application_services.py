@@ -120,11 +120,10 @@ def test_service_container_passes_combiner_config(monkeypatch):
     captured = {}
 
     class CaptureCombiner:
-        def __init__(self, *, symbol, phase1_results, config, data_loader):
+        def __init__(self, *, symbol, phase1_results, config):
             captured["symbol"] = symbol
             captured["phase1_results"] = phase1_results
             captured["config"] = config
-            captured["data_loader"] = data_loader
             captured["instance"] = self
 
     combiner_module = types.ModuleType("phase2.combiner")
@@ -144,8 +143,10 @@ def test_service_container_passes_combiner_config(monkeypatch):
     )
     container = ServiceContainer(settings)
 
-    dummy_loader = object()
-    monkeypatch.setattr(container, "data_loader", lambda: dummy_loader)
+    def fail_data_loader():
+        raise AssertionError("data_loader should not be used when initialising combiner")
+
+    monkeypatch.setattr(container, "data_loader", fail_data_loader)
 
     phase1_results = {"demo": {"sharpe_ratio": 1.0}}
     combiner = container.factor_combiner(phase1_results)
@@ -154,7 +155,6 @@ def test_service_container_passes_combiner_config(monkeypatch):
     assert captured["symbol"] == "0700.HK"
     assert captured["phase1_results"] is phase1_results
     assert captured["config"] == settings.combiner
-    assert captured["data_loader"] is dummy_loader
 
 
 def test_service_container_uses_appsettings_combiner(monkeypatch, tmp_path):
@@ -164,11 +164,10 @@ def test_service_container_uses_appsettings_combiner(monkeypatch, tmp_path):
     captured = {}
 
     class CaptureCombiner:
-        def __init__(self, *, symbol, phase1_results, config, data_loader):
+        def __init__(self, *, symbol, phase1_results, config):
             captured["symbol"] = symbol
             captured["phase1_results"] = phase1_results
             captured["config"] = config
-            captured["data_loader"] = data_loader
             captured["instance"] = self
 
     combiner_module = types.ModuleType("phase2.combiner")
@@ -193,8 +192,10 @@ def test_service_container_uses_appsettings_combiner(monkeypatch, tmp_path):
     settings = AppSettings.from_cli_args(args)
     container = ServiceContainer(settings)
 
-    dummy_loader = object()
-    monkeypatch.setattr(container, "data_loader", lambda: dummy_loader)
+    def fail_data_loader():
+        raise AssertionError("data_loader should not be used when initialising combiner")
+
+    monkeypatch.setattr(container, "data_loader", fail_data_loader)
 
     phase1_results = {"demo": {"sharpe_ratio": 1.0}}
     combiner = container.factor_combiner(phase1_results)
@@ -214,11 +215,10 @@ def test_service_container_supports_combiner_config_alias(monkeypatch):
     captured = {}
 
     class CaptureCombiner:
-        def __init__(self, *, symbol, phase1_results, config, data_loader):
+        def __init__(self, *, symbol, phase1_results, config):
             captured["symbol"] = symbol
             captured["phase1_results"] = phase1_results
             captured["config"] = config
-            captured["data_loader"] = data_loader
             captured["instance"] = self
 
     combiner_module = types.ModuleType("phase2.combiner")
@@ -250,8 +250,10 @@ def test_service_container_supports_combiner_config_alias(monkeypatch):
 
     container = ServiceContainer(LegacySettings())
 
-    dummy_loader = object()
-    monkeypatch.setattr(container, "data_loader", lambda: dummy_loader)
+    def fail_data_loader():
+        raise AssertionError("data_loader should not be used when initialising combiner")
+
+    monkeypatch.setattr(container, "data_loader", fail_data_loader)
 
     phase1_results = {"demo": {"sharpe_ratio": 1.0}}
     combiner = container.factor_combiner(phase1_results)
@@ -260,4 +262,3 @@ def test_service_container_supports_combiner_config_alias(monkeypatch):
     assert captured["symbol"] == "0700.HK"
     assert captured["phase1_results"] is phase1_results
     assert captured["config"] == container.settings.combiner_config
-    assert captured["data_loader"] is dummy_loader
