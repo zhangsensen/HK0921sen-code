@@ -63,6 +63,19 @@ def _build_parser() -> argparse.ArgumentParser:
         help="日志级别 (DEBUG/INFO/WARNING/ERROR)",
     )
     parser.add_argument(
+        "--enable-monitoring",
+        action="store_true",
+        help="启用性能监控（也可通过环境变量 HK_DISCOVERY_MONITORING_ENABLED 控制）",
+    )
+    parser.add_argument(
+        "--monitor-log-dir",
+        help="性能监控日志目录（默认: logs/performance）",
+    )
+    parser.add_argument(
+        "--monitor-db-path",
+        help="性能监控 SQLite 数据库路径（默认: monitoring/performance.db）",
+    )
+    parser.add_argument(
         "--parallel-mode",
         choices=["off", "process"],
         default="off",

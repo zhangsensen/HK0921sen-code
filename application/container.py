@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, Type, TypeVar
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Type, TypeVar
 
 from database import DatabaseManager
 from utils.cache import InMemoryCache
 from utils.logging import get_logger
+from utils.monitoring import PerformanceMonitor
 from .configuration import AppSettings
 
 if TYPE_CHECKING:  # pragma: no cover - type hinting only
@@ -157,6 +158,16 @@ class ServiceContainer:
 
     def logger(self):
         return self._logger
+
+    def performance_monitor(self) -> Optional[PerformanceMonitor]:
+        monitoring_config = getattr(self.settings, "monitoring", None)
+        if not monitoring_config:
+            return None
+
+        def factory() -> PerformanceMonitor:
+            return PerformanceMonitor(monitoring_config)
+
+        return self.resolve(PerformanceMonitor, factory)
 
 
 __all__ = ["ServiceContainer"]

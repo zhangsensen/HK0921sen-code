@@ -7,6 +7,7 @@ from application.configuration import AppSettings
 from application.container import ServiceContainer
 from application.services import DiscoveryOrchestrator
 from config import CombinerConfig
+from utils.monitoring import MonitorConfig, PerformanceMonitor
 
 
 class StubDatabase:
@@ -75,10 +76,11 @@ class StubCombiner:
 
 
 class StubContainer:
-    def __init__(self) -> None:
+    def __init__(self, monitor: PerformanceMonitor | None = None) -> None:
         self.db = StubDatabase()
         self.explorer = StubExplorer()
         self.combiner = StubCombiner()
+        self._monitor = monitor
 
     def database(self):
         return self.db
@@ -94,6 +96,9 @@ class StubContainer:
 
     def logger(self):
         return logging.getLogger("test")
+
+    def performance_monitor(self):
+        return self._monitor
 
 
 def test_orchestrator_runs_both_phases():
@@ -264,3 +269,67 @@ def test_service_container_supports_combiner_config_alias(monkeypatch):
     assert hasattr(container.settings, "combiner")
     assert captured["config"] == container.settings.combiner
     assert captured["config"] == container.settings.combiner_config
+
+
+def test_service_container_creates_performance_monitor(tmp_path):
+    monitor_config = MonitorConfig(
+        enabled=False,
+        log_dir=str(tmp_path / "logs"),
+        database_path=str(tmp_path / "monitor.db"),
+        enable_system_metrics=False,
+        enable_alerting=False,
+    )
+    settings = AppSettings(
+        symbol="0700.HK",
+        phase="phase1",
+        reset=False,
+        data_root=None,
+        db_path=tmp_path / "db.sqlite",
+        monitoring=monitor_config,
+    )
+    container = ServiceContainer(settings)
+
+    monitor = container.performance_monitor()
+
+    assert isinstance(monitor, PerformanceMonitor)
+    assert container.performance_monitor() is monitor
+
+    monitor.stop()
+
+
+def test_orchestrator_records_monitor_metrics(tmp_path):
+    monitor_config = MonitorConfig(
+        enabled=False,
+        log_dir=str(tmp_path / "logs"),
+        database_path=str(tmp_path / "monitor.db"),
+        enable_system_metrics=False,
+        enable_alerting=False,
+    )
+    settings = AppSettings(
+        symbol="0700.HK",
+        phase="both",
+        reset=False,
+        data_root=None,
+        db_path=tmp_path / "db.sqlite",
+        monitoring=monitor_config,
+    )
+
+    monitor = PerformanceMonitor(monitor_config)
+    container = StubContainer(monitor=monitor)
+    orchestrator = DiscoveryOrchestrator(settings, container)
+
+    result = asyncio.run(orchestrator.run_async())
+
+    stats = monitor.get_operation_statistics()
+    assert stats["discovery_phase1"]["count"] == 1
+    assert stats["discovery_phase2"]["count"] == 1
+
+    phase1_metric = monitor.metrics_history["discovery_phase1_result_count"][-1]
+    assert phase1_metric.value == len(result.phase1)
+    assert phase1_metric.tags["symbol"] == "0700.HK"
+
+    phase2_metric = monitor.metrics_history["discovery_phase2_result_count"][-1]
+    assert phase2_metric.value == len(result.strategies)
+    assert phase2_metric.metadata["executed"] is True
+
+    monitor.stop()
