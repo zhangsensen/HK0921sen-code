@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable, Dict, Optional, Type, TypeVar
 from database import DatabaseManager
 from utils.cache import InMemoryCache
 from utils.logging import get_logger
-from utils.monitoring import PerformanceMonitor
+from utils.monitoring.runtime import PerformanceMonitor
 from .configuration import AppSettings
 
 if TYPE_CHECKING:  # pragma: no cover - type hinting only

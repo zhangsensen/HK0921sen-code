@@ -4,7 +4,7 @@ from application.configuration import AppSettings
 from application.container import ServiceContainer
 from config import CombinerConfig
 from main import _build_parser
-from utils.monitoring import MonitorConfig
+from utils.monitoring.config import MonitorConfig
 
 
 def test_app_settings_from_cli_args(tmp_path):

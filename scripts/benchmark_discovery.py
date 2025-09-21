@@ -19,7 +19,8 @@ from application.configuration import AppSettings
 from application.container import ServiceContainer
 from application.services import DiscoveryOrchestrator
 from utils.logging import configure
-from utils.monitoring import MetricCategory, PerformanceMonitor
+from utils.monitoring.models import MetricCategory
+from utils.monitoring.runtime import PerformanceMonitor
 
 
 @dataclass

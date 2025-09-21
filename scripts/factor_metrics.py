@@ -5,7 +5,8 @@ import argparse
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Iterable, List, Tuple
 
-from utils.monitoring import MetricCategory, get_performance_monitor
+from utils.monitoring.models import MetricCategory
+from utils.monitoring.runtime import get_performance_monitor
 
 
 def _normalise_metric_name(name: str) -> str:

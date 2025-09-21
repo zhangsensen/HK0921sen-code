@@ -1,15 +1,20 @@
 """Tests for factor-focused monitoring helpers."""
 from __future__ import annotations
 
+import json
+from datetime import datetime, timezone
+
 from scripts import factor_metrics
-from utils.monitoring import (
-    AlertSeverity,
+from utils.monitoring.config import (
     FactorAlertDefinition,
     FactorMetricTemplate,
-    MetricCategory,
     MonitorConfig,
+)
+from utils.monitoring.models import AlertSeverity, MetricCategory, MetricData, MetricType
+from utils.monitoring.runtime import (
     PerformanceMonitor,
     get_performance_monitor,
+    measure_operation_performance,
     stop_global_monitoring,
 )
 
@@ -111,3 +116,66 @@ def test_factor_metrics_cli_reports_grouped_values(tmp_path, capsys):
     assert "Leaderboard" in captured.out
 
     stop_global_monitoring()
+
+
+def test_measure_operation_context_manager_records_metrics(tmp_path):
+    stop_global_monitoring()
+    config = MonitorConfig(
+        enabled=False,
+        enable_system_metrics=False,
+        enable_alerting=False,
+        log_dir=str(tmp_path / "logs"),
+        database_path=str(tmp_path / "monitor.db"),
+    )
+    monitor = get_performance_monitor(config)
+
+    operation_name = "unit_test_operation"
+    with measure_operation_performance(operation_name, tags={"scope": "test"}):
+        pass
+
+    stats = monitor.get_operation_statistics()
+    assert stats[operation_name]["count"] == 1
+
+    operation_metrics = monitor.get_metrics(categories=[MetricCategory.OPERATION])
+    recorded_names = {metric.name for metric in operation_metrics}
+    assert f"{operation_name}_duration" in recorded_names
+    assert f"{operation_name}_memory_delta" in recorded_names
+
+    stop_global_monitoring()
+
+
+def test_export_metrics_to_file_includes_recorded_payload(tmp_path):
+    config = MonitorConfig(
+        enabled=False,
+        enable_system_metrics=False,
+        enable_alerting=False,
+        log_dir=str(tmp_path / "logs"),
+        database_path=str(tmp_path / "monitor.db"),
+    )
+    monitor = PerformanceMonitor(config)
+
+    metric = MetricData(
+        name="custom.metric",
+        value=1.23,
+        type=MetricType.GAUGE,
+        category=MetricCategory.CUSTOM,
+        timestamp=datetime.now(timezone.utc),
+        tags={"source": "test"},
+    )
+    monitor._save_metric_to_storage(metric)
+
+    output = tmp_path / "metrics.json"
+    assert monitor.export_metrics_to_file(str(output), compress=False) is True
+
+    payload = json.loads(output.read_text())
+    assert payload[0]["name"] == "custom.metric"
+
+    monitor.stop()
+
+
+def test_monitoring_package_re_exports_public_api():
+    import utils.monitoring as monitoring
+
+    assert monitoring.PerformanceMonitor is PerformanceMonitor
+    assert monitoring.MonitorConfig is MonitorConfig
+    assert monitoring.MetricCategory is MetricCategory

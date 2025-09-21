@@ -35,6 +35,7 @@ class OptimizedDataLoader(HistoricalDataLoader):
         self._preload_enabled = preload
         self._preloaded: Dict[Tuple[str, str], object] = {}
         self._lock = threading.Lock()
+        self._preload_context = threading.local()
         self._stats = {"preload_hits": 0, "preload_misses": 0, "disk_hits": 0, "disk_writes": 0}
         self.cache_dir = Path(cache_dir).expanduser() if cache_dir else None
         if self.cache_dir:
@@ -80,20 +81,42 @@ class OptimizedDataLoader(HistoricalDataLoader):
             return
         self._stats["disk_writes"] += 1
 
+    def _load_for_preload(self, symbol: str, timeframe: str):
+        """Load data bypassing preloading bookkeeping."""
+
+        if getattr(self, "data_provider", None) is not None:
+            provided = self.data_provider(symbol, timeframe)  # type: ignore[call-arg]
+            if provided is not None:
+                cleaned = provided.sort_index().dropna(how="all")
+                self.cache.set((symbol, timeframe), cleaned, ttl=self.cache_ttl)
+                if self.cache_dir:
+                    self._store_to_disk(symbol, timeframe, cleaned)
+                return cleaned
+
+        self._preload_context.active = True
+        try:
+            data = super().load(symbol, timeframe)
+        finally:
+            self._preload_context.active = False
+        if self.cache_dir:
+            self._store_to_disk(symbol, timeframe, data)
+        return data
+
     # ------------------------------------------------------------------
     def load(self, symbol: str, timeframe: str) -> object:
         key = (symbol, timeframe)
-        if self.cache_dir:
-            cached = self._load_from_disk(symbol, timeframe)
-            if cached is not None:
-                return cached
-        if self._preload_enabled:
+        skip_preload = getattr(self._preload_context, "active", False)
+        if self._preload_enabled and not skip_preload:
             with self._lock:
                 data = self._preloaded.pop(key, None)
             if data is not None:
                 self._stats["preload_hits"] += 1
                 return data
             self._stats["preload_misses"] += 1
+        if self.cache_dir:
+            cached = self._load_from_disk(symbol, timeframe)
+            if cached is not None:
+                return cached
         result = super().load(symbol, timeframe)
         if self.cache_dir:
             self._store_to_disk(symbol, timeframe, result)
@@ -105,7 +128,7 @@ class OptimizedDataLoader(HistoricalDataLoader):
             return {}
 
         futures = {
-            self._executor.submit(self.load, symbol, timeframe): (symbol, timeframe)
+            self._executor.submit(self._load_for_preload, symbol, timeframe): (symbol, timeframe)
             for timeframe in timeframes
         }
         loaded: Dict[Tuple[str, str], object] = {}

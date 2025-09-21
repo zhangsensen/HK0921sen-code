@@ -8,7 +8,7 @@ from typing import Callable, Optional, TypeVar
 
 from config import CombinerConfig
 from utils.validation import validate_symbol
-from utils.monitoring import MonitorConfig
+from utils.monitoring.config import MonitorConfig
 
 
 Numeric = TypeVar("Numeric", int, float)
