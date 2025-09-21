@@ -76,6 +76,9 @@ class HistoricalDataLoader:
 
     # ------------------------------------------------------------------
     def _load_raw(self, symbol: str, timeframe: str) -> "pd.DataFrame":
+        self._ensure_safe_component(symbol, "symbol")
+        self._ensure_safe_component(timeframe, "timeframe")
+
         if self.data_provider is not None:
             df = self.data_provider(symbol, timeframe)
             if df is None:
@@ -85,6 +88,7 @@ class HistoricalDataLoader:
         if self.data_root is None:
             raise FileNotFoundError("No data root provided for raw data loading")
 
+        errors: list[str] = []
         search_locations = [
             (self.data_root / "raw_data" / timeframe, symbol),
             (self.data_root / "raw_data" / symbol, timeframe),
@@ -98,8 +102,22 @@ class HistoricalDataLoader:
                 if not file_path.exists():
                     continue
                 if extension == ".parquet":
-                    return pd.read_parquet(file_path)
-                return self._read_csv(file_path)
+                    try:
+                        return pd.read_parquet(file_path)
+                    except Exception as exc:  # pragma: no cover - surfaced via fallback logic
+                        errors.append(f"{file_path}: {exc}")
+                        continue
+                try:
+                    return self._read_csv(file_path)
+                except ValueError as exc:
+                    errors.append(f"{file_path}: {exc}")
+                    continue
+
+        if errors:
+            raise ValueError(
+                "Failed to load data for "
+                f"{symbol} {timeframe}. Encountered: " + "; ".join(errors)
+            )
 
         raise FileNotFoundError(
             f"Missing data file for {symbol} {timeframe}. "
@@ -107,7 +125,10 @@ class HistoricalDataLoader:
         )
 
     def _read_csv(self, file_path: Path) -> "pd.DataFrame":
-        dataframe = pd.read_csv(file_path)
+        try:
+            dataframe = pd.read_csv(file_path)
+        except Exception as exc:  # pragma: no cover - surfaced in tests
+            raise ValueError(f"Unable to parse CSV file {file_path}: {exc}") from exc
         if dataframe.empty:
             return dataframe
 
@@ -158,3 +179,15 @@ class HistoricalDataLoader:
         if timeframe.endswith("h"):
             return "1h" if timeframe in {"2h", "4h"} else "1m"
         return "1m"
+
+    @staticmethod
+    def _ensure_safe_component(value: str, kind: str) -> None:
+        if not value:
+            raise ValueError(f"{kind.capitalize()} cannot be empty")
+        if value != value.strip():
+            raise ValueError(f"{kind.capitalize()} contains leading/trailing whitespace: {value!r}")
+        if "/" in value or "\\" in value:
+            raise ValueError(f"{kind.capitalize()} contains invalid path separators: {value}")
+        path = Path(value)
+        if path.is_absolute() or any(part in {"..", ""} for part in path.parts):
+            raise ValueError(f"{kind.capitalize()} contains invalid path components: {value}")

@@ -47,6 +47,10 @@ HK0920sen-code/
 - Focus on unit-level coverage for the most critical services (config, DI container, explorers, database, utilities).
 - End-to-end behaviour is exercised through the CLI orchestrator in `tests/test_application_services.py`.
 
+### Operational Notes
+- When deploying the loaders in production, configure filesystem sandboxing or a strict whitelist for data directories so that
+  user-provided symbols and timeframes cannot traverse outside vetted storage locations.
+
 ## Runtime Output
 
 Generated artefacts (logs, monitoring databases, exports) are no longer committed. The application automatically creates the necessary folders under the working directory when it runs. Refer to `docs/MONITORING_OVERVIEW.md` for guidance on where these files live at runtime and how to clean them safely.
