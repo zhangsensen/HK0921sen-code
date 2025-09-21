@@ -132,7 +132,6 @@ class ServiceContainer:
             symbol=self.settings.symbol,
             phase1_results=phase1_results,
             config=combiner_config,
-            data_loader=self.data_loader(),
         )
 
     def logger(self):

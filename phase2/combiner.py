@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from itertools import combinations
 from math import comb
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
 
@@ -29,14 +29,10 @@ class MultiFactorCombiner:
         phase1_results: Mapping[str, Mapping[str, object]],
         *,
         config: CombinerConfig | None = None,
-        timeframes: Optional[Iterable[str]] = None,
-        data_loader=None,
     ) -> None:
         self.symbol = symbol
         self.phase1_results = phase1_results
         self.config = config or CombinerConfig()
-        self.timeframes = list(timeframes) if timeframes is not None else []
-        self.data_loader = data_loader
         self._last_selected_factors: List[Mapping[str, object]] = []
 
     def select_top_factors(self, top_n: Optional[int] = None) -> List[Mapping[str, object]]:
