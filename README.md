@@ -111,6 +111,7 @@ CI 可复用该脚本，也可以直接执行 `pytest -m slow` 将冒烟任务�
 
 ## 性能监控与基准
 
+- 监控栈现以子包形式提供：`utils.monitoring.config`（配置）、`utils.monitoring.models`（枚举与数据模型）以及 `utils.monitoring.runtime`（运行时与上下文管理器）。顶层 `utils.monitoring` 仍旧重导出常用符号，旧代码可以逐步迁移至更清晰的模块路径。
 - `python scripts/benchmark_discovery.py` 会在启用 `PerformanceMonitor` 的前提下重复运行阶段一/二，默认采集 3 次样本，并将
   `MetricCategory.OPERATION` 指标导出到 `runtime/benchmark/exports/`（JSON 必定生成，CSV 依赖 `pandas`）。
 - CLI 输出包含每次执行耗时、总体成功率以及阶段级别的平均耗时。导出的 JSON/CSV 可以配合 `pandas` 做进一步分析，重点关注

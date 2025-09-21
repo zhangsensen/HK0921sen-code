@@ -7,7 +7,8 @@ from application.configuration import AppSettings
 from application.container import ServiceContainer
 from application.services import DiscoveryOrchestrator
 from config import CombinerConfig
-from utils.monitoring import MonitorConfig, PerformanceMonitor
+from utils.monitoring.config import MonitorConfig
+from utils.monitoring.runtime import PerformanceMonitor
 
 
 class StubDatabase:

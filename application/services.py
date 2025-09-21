@@ -9,7 +9,8 @@ from typing import Dict, Iterable, List, Optional
 from database import FactorResult
 from .configuration import AppSettings
 from .container import ServiceContainer
-from utils.monitoring import MetricCategory, MetricType, PerformanceMonitor
+from utils.monitoring.models import MetricCategory, MetricType
+from utils.monitoring.runtime import PerformanceMonitor
 
 
 @dataclass

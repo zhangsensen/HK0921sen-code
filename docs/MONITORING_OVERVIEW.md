@@ -1,11 +1,20 @@
 # Monitoring Overview
 
-`utils.monitoring.PerformanceMonitor` centralises runtime metrics for factor exploration jobs. The monitor is designed to be embedded by the CLI orchestrator, but can also be used stand-alone in notebooks or scripts.
+`utils.monitoring` is now a package that separates configuration, data models and runtime behaviour. Import monitoring primitives from the dedicated modules:
+
+- `utils.monitoring.config` contains `MonitorConfig` and factor-specific templates.
+- `utils.monitoring.models` defines enums and dataclasses for metrics and alerts.
+- `utils.monitoring.runtime` provides `PerformanceMonitor` and helper utilities.
+
+The package root continues to re-export the most common types for backwards compatibility, so existing imports keep working while new code can rely on the explicit modules.
+
+`utils.monitoring.runtime.PerformanceMonitor` centralises runtime metrics for factor exploration jobs. The monitor is designed to be embedded by the CLI orchestrator, but can also be used stand-alone in notebooks or scripts.
 
 ## Getting Started
 
 ```python
-from utils.monitoring import PerformanceMonitor, MonitorConfig
+from utils.monitoring.config import MonitorConfig
+from utils.monitoring.runtime import PerformanceMonitor
 
 config = MonitorConfig(
     log_dir="runtime/logs",
@@ -39,7 +48,7 @@ python -m main \
 ## Recording Custom Metrics
 
 ```python
-from utils.monitoring import MetricCategory, MetricType
+from utils.monitoring.models import MetricCategory, MetricType
 
 monitor.record_metric(
     name="factor_load_rows",
@@ -58,13 +67,13 @@ The call queues an asynchronous write to SQLite and a JSON artefact inside `<log
 Repeated factor experiments can reuse configuration-driven templates and alerts:
 
 ```python
-from utils.monitoring import (
-    AlertSeverity,
+from utils.monitoring.config import (
     FactorAlertDefinition,
     FactorMetricTemplate,
     MonitorConfig,
-    PerformanceMonitor,
 )
+from utils.monitoring.models import AlertSeverity
+from utils.monitoring.runtime import PerformanceMonitor
 
 config = MonitorConfig(
     enabled=False,
@@ -127,7 +136,7 @@ You can filter by time range or category:
 
 ```python
 from datetime import datetime, timedelta
-from utils.monitoring import MetricCategory
+from utils.monitoring.models import MetricCategory
 
 start = datetime.utcnow() - timedelta(hours=2)
 monitor.export_metrics(
