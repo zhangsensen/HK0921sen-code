@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from argparse import Namespace
 from pathlib import Path
 
 from application.configuration import AppSettings
@@ -154,6 +155,56 @@ def test_service_container_passes_combiner_config(monkeypatch):
     assert captured["phase1_results"] is phase1_results
     assert captured["config"] == settings.combiner
     assert captured["data_loader"] is dummy_loader
+
+
+def test_service_container_uses_appsettings_combiner(monkeypatch, tmp_path):
+    import sys
+    import types
+
+    captured = {}
+
+    class CaptureCombiner:
+        def __init__(self, *, symbol, phase1_results, config, data_loader):
+            captured["symbol"] = symbol
+            captured["phase1_results"] = phase1_results
+            captured["config"] = config
+            captured["data_loader"] = data_loader
+            captured["instance"] = self
+
+    combiner_module = types.ModuleType("phase2.combiner")
+    combiner_module.MultiFactorCombiner = CaptureCombiner
+    phase2_module = types.ModuleType("phase2")
+    phase2_module.combiner = combiner_module
+    monkeypatch.setitem(sys.modules, "phase2", phase2_module)
+    monkeypatch.setitem(sys.modules, "phase2.combiner", combiner_module)
+
+    args = Namespace(
+        symbol="0700.HK",
+        phase="phase2",
+        reset=False,
+        data_root=str(tmp_path / "dataset"),
+        db_path=str(tmp_path / "db.sqlite"),
+        log_level="INFO",
+        combiner_top_n=11,
+        combiner_max_factors=4,
+        combiner_min_sharpe=1.05,
+        combiner_min_ic=0.06,
+    )
+    settings = AppSettings.from_cli_args(args)
+    container = ServiceContainer(settings)
+
+    dummy_loader = object()
+    monkeypatch.setattr(container, "data_loader", lambda: dummy_loader)
+
+    phase1_results = {"demo": {"sharpe_ratio": 1.0}}
+    combiner = container.factor_combiner(phase1_results)
+
+    assert combiner is captured["instance"]
+    assert captured["config"] is settings.combiner
+    assert captured["config"].top_n == 11
+    assert captured["config"].max_factors == 4
+    assert captured["config"].min_sharpe == 1.05
+    assert captured["config"].min_information_coefficient == 0.06
 
 
 def test_service_container_supports_combiner_config_alias(monkeypatch):
