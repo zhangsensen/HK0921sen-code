@@ -54,6 +54,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--combiner-top-n",
+        dest="combiner_top_n",
         type=int,
         default=None,
         help=(
@@ -63,6 +64,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--combiner-max-factors",
+        dest="combiner_max_factors",
         type=int,
         default=None,
         help=(
@@ -72,6 +74,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--combiner-min-sharpe",
+        dest="combiner_min_sharpe",
         type=float,
         default=None,
         help=(
@@ -81,6 +84,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--combiner-min-ic",
+        dest="combiner_min_ic",
         type=float,
         default=None,
         help=(
