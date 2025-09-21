@@ -1,7 +1,6 @@
 """Multi-factor combination optimizer."""
 from __future__ import annotations
 
-import logging
 from itertools import combinations
 from math import comb
 from typing import Dict, List, Mapping, Optional, Sequence
@@ -15,10 +14,6 @@ except ModuleNotFoundError:  # pragma: no cover
 
 from config import CombinerConfig
 from utils.performance_metrics import PerformanceMetrics
-
-
-logger = logging.getLogger(__name__)
-
 
 class MultiFactorCombiner:
     """Combine top-performing single factors into strategies."""
@@ -77,25 +72,25 @@ class MultiFactorCombiner:
         theoretical_total = sum(comb(available, r) for r in range(2, limit + 1))
         threshold = self.config.max_combinations
 
+        if threshold is not None:
+            if threshold <= 0:
+                raise ValueError(
+                    "max_combinations must be a positive integer; "
+                    "consider increasing the limit or adjusting top_n/max_factors."
+                )
+            if theoretical_total > threshold:
+                raise ValueError(
+                    (
+                        "Requested %s combinations (top_n=%s, max_factors=%s) exceeds "
+                        "configured max_combinations=%s. Reduce top_n or max_factors, "
+                        "or increase the limit to continue."
+                    )
+                    % (theoretical_total, available, limit, threshold)
+                )
+
         combos: List[Sequence[Mapping[str, object]]] = []
         for r in range(2, limit + 1):
-            for combo in combinations(factors_to_use, r):
-                combos.append(combo)
-                if threshold is not None and len(combos) >= threshold:
-                    if theoretical_total > threshold:
-                        logger.warning(
-                            (
-                                "Generated combination count %s exceeds limit %s "
-                                "(top_n=%s, max_factors=%s). Returning first %s combinations; "
-                                "consider reducing top_n or max_factors, or adjusting the limit to control runtime."
-                            ),
-                            theoretical_total,
-                            threshold,
-                            available,
-                            limit,
-                            threshold,
-                        )
-                    return combos
+            combos.extend(combinations(factors_to_use, r))
         return combos
 
     def backtest_combination(self, combo: Sequence[Mapping[str, object]]) -> Dict[str, object]:

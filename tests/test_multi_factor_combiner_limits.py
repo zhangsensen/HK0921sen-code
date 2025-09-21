@@ -1,43 +1,55 @@
 """Tests for combination limiting behaviour in MultiFactorCombiner."""
 
+from math import comb
+
+import pytest
+
+pytest.importorskip("numpy")
+
 from config import CombinerConfig
 from phase2.combiner import MultiFactorCombiner
 
 
 def _make_factors(count: int):
-    return [{"factor": f"f{i}", "timeframe": "1d"} for i in range(count)]
+    return [
+        {
+            "factor": f"f{i}",
+            "timeframe": "1d",
+            "sharpe_ratio": 1.0 - i * 0.01,
+            "information_coefficient": 0.1,
+        }
+        for i in range(count)
+    ]
 
 
-def test_generate_combinations_respects_threshold_without_exceeding():
-    config = CombinerConfig(top_n=4, max_factors=3, max_combinations=10)
+def test_generate_combinations_default_limit_allows_full_space():
+    config = CombinerConfig(top_n=4, max_factors=3)
     combiner = MultiFactorCombiner("0700.HK", {}, config=config)
 
     combos = combiner.generate_combinations(_make_factors(4))
 
-    assert len(combos) == 10  # C(4,2) + C(4,3)
-    assert {item["factor"] for combo in combos for item in combo} == {
-        "f0",
-        "f1",
-        "f2",
-        "f3",
-    }
+    expected = comb(4, 2) + comb(4, 3)
+    assert len(combos) == expected
 
 
-def test_generate_combinations_truncates_and_logs_when_threshold_exceeded(caplog):
-    config = CombinerConfig(top_n=5, max_factors=3, max_combinations=5)
+def test_generate_combinations_handles_exact_threshold():
+    config = CombinerConfig(top_n=5, max_factors=3, max_combinations=20)
     combiner = MultiFactorCombiner("0700.HK", {}, config=config)
 
-    with caplog.at_level("WARNING"):
-        combos = combiner.generate_combinations(_make_factors(6))
+    combos = combiner.generate_combinations(_make_factors(6))
 
-    assert len(combos) == 5
-    assert {item["factor"] for combo in combos for item in combo} == {
-        "f0",
-        "f1",
-        "f2",
-        "f3",
-        "f4",
-    }
-    warning_messages = [record.message for record in caplog.records]
-    assert any("exceeds limit" in message for message in warning_messages)
-    assert any("top_n=5" in message for message in warning_messages)
+    expected = comb(5, 2) + comb(5, 3)
+    assert len(combos) == expected
+
+
+def test_generate_combinations_raises_when_limit_exceeded():
+    config = CombinerConfig(top_n=6, max_factors=3, max_combinations=15)
+    combiner = MultiFactorCombiner("0700.HK", {}, config=config)
+
+    with pytest.raises(ValueError) as excinfo:
+        combiner.generate_combinations(_make_factors(6))
+
+    message = str(excinfo.value)
+    assert "max_combinations" in message
+    assert "top_n=6" in message
+    assert "Reduce top_n or max_factors" in message
