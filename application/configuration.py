@@ -55,7 +55,9 @@ class AppSettings:
 
         def resolve_combiner_value(arg_name: str, env_name: str, caster, default):
             arg_value = getattr(args, arg_name, None)
-            if arg_value is not None:
+            provided_flag = getattr(args, f"_{arg_name}_provided", False)
+            has_attribute = hasattr(args, arg_name)
+            if provided_flag or (has_attribute and arg_value is not None and arg_value != default):
                 return caster(arg_value)
             env_value = os.environ.get(env_name)
             if env_value is not None:

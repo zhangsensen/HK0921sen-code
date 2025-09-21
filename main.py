@@ -20,6 +20,32 @@ from utils.logging import configure
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="港股因子探索系统")
     combiner_defaults = CombinerConfig()
+
+    class _CombinerOptionAction(argparse.Action):
+        """Track whether a combiner option was explicitly provided via CLI."""
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            setattr(namespace, self.dest, values)
+            setattr(namespace, f"_{self.dest}_provided", True)
+
+    def _add_combiner_option(
+        option: str,
+        *,
+        dest: str,
+        value_type,
+        default,
+        help_text: str,
+    ) -> None:
+        flag_name = f"_{dest}_provided"
+        parser.set_defaults(**{flag_name: False})
+        parser.add_argument(
+            option,
+            dest=dest,
+            type=value_type,
+            default=default,
+            action=_CombinerOptionAction,
+            help=help_text,
+        )
     parser.add_argument("--symbol", required=True, help="股票代码，如: 0700.HK")
     parser.add_argument("--phase", choices=["phase1", "phase2", "both"], default="both")
     parser.add_argument("--reset", action="store_true", help="重置数据库")
@@ -52,42 +78,42 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         help="内存监控阈值，超过后输出警告信息",
     )
-    parser.add_argument(
+    _add_combiner_option(
         "--combiner-top-n",
         dest="combiner_top_n",
-        type=int,
-        default=None,
-        help=(
+        value_type=int,
+        default=combiner_defaults.top_n,
+        help_text=(
             "阶段2中纳入多因子组合评估的顶尖单因子数量"
             f"（默认: {combiner_defaults.top_n}）"
         ),
     )
-    parser.add_argument(
+    _add_combiner_option(
         "--combiner-max-factors",
         dest="combiner_max_factors",
-        type=int,
-        default=None,
-        help=(
+        value_type=int,
+        default=combiner_defaults.max_factors,
+        help_text=(
             "组合生成时每个策略允许的最大因子个数"
             f"（默认: {combiner_defaults.max_factors}）"
         ),
     )
-    parser.add_argument(
+    _add_combiner_option(
         "--combiner-min-sharpe",
         dest="combiner_min_sharpe",
-        type=float,
-        default=None,
-        help=(
+        value_type=float,
+        default=combiner_defaults.min_sharpe,
+        help_text=(
             "筛选阶段2因子及策略时所需的最低夏普比率"
             f"（默认: {combiner_defaults.min_sharpe}）"
         ),
     )
-    parser.add_argument(
+    _add_combiner_option(
         "--combiner-min-ic",
         dest="combiner_min_ic",
-        type=float,
-        default=None,
-        help=(
+        value_type=float,
+        default=combiner_defaults.min_information_coefficient,
+        help_text=(
             "筛选因子时所需的最小信息系数绝对值"
             f"（默认: {combiner_defaults.min_information_coefficient}）"
         ),

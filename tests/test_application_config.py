@@ -2,6 +2,7 @@ from argparse import Namespace
 from pathlib import Path
 
 from application.configuration import AppSettings
+from main import _build_parser
 
 
 def test_app_settings_from_cli_args(tmp_path, monkeypatch):
@@ -34,18 +35,8 @@ def test_app_settings_env_fallback(monkeypatch):
     monkeypatch.setenv("HK_DISCOVERY_COMBINER_MAX_FACTORS", "4")
     monkeypatch.setenv("HK_DISCOVERY_COMBINER_MIN_SHARPE", "0.9")
     monkeypatch.setenv("HK_DISCOVERY_COMBINER_MIN_IC", "0.03")
-    args = Namespace(
-        symbol="0700.HK",
-        phase="phase1",
-        reset=False,
-        data_root=None,
-        db_path=None,
-        log_level="INFO",
-        combiner_top_n=None,
-        combiner_max_factors=None,
-        combiner_min_sharpe=None,
-        combiner_min_ic=None,
-    )
+    parser = _build_parser()
+    args = parser.parse_args(["--symbol", "0700.HK", "--phase", "phase1"])
     settings = AppSettings.from_cli_args(args)
     assert settings.db_path == Path("/tmp/db.sqlite")
     assert settings.combiner.top_n == 12
@@ -72,6 +63,10 @@ def test_app_settings_cli_overrides_combiner_env(monkeypatch, tmp_path):
         combiner_min_sharpe=1.2,
         combiner_min_ic=0.11,
     )
+    setattr(args, "_combiner_top_n_provided", True)
+    setattr(args, "_combiner_max_factors_provided", True)
+    setattr(args, "_combiner_min_sharpe_provided", True)
+    setattr(args, "_combiner_min_ic_provided", True)
 
     settings = AppSettings.from_cli_args(args)
 
