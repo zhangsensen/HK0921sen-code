@@ -4,12 +4,23 @@ from collections import defaultdict
 
 import pytest
 
-from config import TIMEFRAME_TO_PANDAS_RULE
 from data_loader_optimized import OptimizedDataLoader
 from phase1.parallel_explorer import ParallelFactorExplorer
 from utils.factor_cache import FactorCache
 
 MAIN_PID = os.getpid()
+
+
+def _timeframe_to_freq(timeframe: str) -> str:
+    value = ''.join(ch for ch in timeframe if ch.isdigit()) or timeframe[:-1]
+    unit = timeframe[-1]
+    if unit == 'm':
+        return f"{value}min"
+    if unit == 'h':
+        return f"{value}h"
+    if unit == 'd':
+        return f"{value}D"
+    raise ValueError(f"Unsupported timeframe {timeframe}")
 
 
 class DummyLoader:
@@ -176,7 +187,7 @@ def test_parallel_explorer_preloads_and_hits_disk(tmp_path, caplog, monkeypatch)
     for symbol in symbols:
         symbol_data = {}
         for timeframe in timeframes:
-            freq = TIMEFRAME_TO_PANDAS_RULE[timeframe]
+            freq = _timeframe_to_freq(timeframe)
             periods = 240 if timeframe.endswith("m") else 64
             base = 90 + (abs(hash((symbol, timeframe))) % 25)
             index = pd.date_range("2024-01-01 09:30", periods=periods, freq=freq)
@@ -238,7 +249,10 @@ def test_parallel_explorer_preloads_and_hits_disk(tmp_path, caplog, monkeypatch)
         assert provider_calls[(symbols[0], timeframe)] == 1
 
     warning_records = [record for record in caplog.records if "内存使用" in record.message]
-    assert warning_records, "memory pressure warning should be logged"
+    if explorer.process_pool_available:
+        assert warning_records, "memory pressure warning should be logged"
+    else:
+        assert any("进程池不可用" in record.message for record in caplog.records)
 
     process_ids = {value["process_id"] for value in results.values()}
     if explorer.process_pool_available:

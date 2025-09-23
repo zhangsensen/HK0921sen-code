@@ -57,7 +57,7 @@ def _yang_zhang(open_: "pd.Series", high: "pd.Series", low: "pd.Series", close: 
 
 
 def _volatility_ratio(close: "pd.Series", short: int, long: int) -> "pd.Series":
-    returns = close.pct_change().fillna(0)
+    returns = close.pct_change(fill_method=None).fillna(0)
     short_vol = returns.rolling(short).std(ddof=0)
     long_vol = returns.rolling(long).std(ddof=0)
     return short_vol / long_vol.replace(0, np.nan)

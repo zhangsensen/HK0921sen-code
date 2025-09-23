@@ -1,0 +1,284 @@
+[
+  {
+    "name": "discovery_phase1_duration",
+    "value": 8.818156003952026,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:17.704169",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 230.953125,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:17.706041",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_result_count",
+    "value": 792.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:17.707110",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  },
+  {
+    "name": "discovery_phase2_duration",
+    "value": 0.05369997024536133,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:17.760986",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_memory_delta",
+    "value": 0.109375,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:17.762172",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_result_count",
+    "value": 105.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:17.763223",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 8.810234069824219,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:26.577780",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 22.34375,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:26.579334",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_result_count",
+    "value": 792.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:26.580513",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  },
+  {
+    "name": "discovery_phase2_duration",
+    "value": 0.0519709587097168,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:26.632610",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_memory_delta",
+    "value": 0.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:26.633478",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_result_count",
+    "value": 105.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:26.634327",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 8.854472875595093,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:35.492992",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": -13.1875,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:35.494394",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_result_count",
+    "value": 792.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:35.496250",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  },
+  {
+    "name": "discovery_phase2_duration",
+    "value": 0.05244302749633789,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:35.548878",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_memory_delta",
+    "value": -6.78125,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:35.550594",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_result_count",
+    "value": 105.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:03:35.551718",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  }
+]

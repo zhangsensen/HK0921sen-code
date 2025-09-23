@@ -36,7 +36,7 @@ register_factor(
 register_factor(
     "tick_imbalance",
     "microstructure",
-    lambda data: data["close"].pct_change().apply(np.sign).rolling(10).mean(),
+    lambda data: data["close"].pct_change(fill_method=None).apply(np.sign).rolling(10).mean(),
 )
 register_factor(
     "spread_dynamics",

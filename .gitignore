@@ -142,4 +142,5 @@ Thumbs.db
 # Local data
 *.local
 local_results/
+benchmark_results/
 .data/

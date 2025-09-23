@@ -65,6 +65,7 @@ class StubCombiner:
                 "symbol": "0700.HK",
                 "strategy_name": "demo",
                 "factors": ["demo"],
+                "timeframes": ["1m"],
                 "sharpe_ratio": 1.0,
                 "stability": 0.5,
                 "trades_count": 1,
@@ -194,6 +195,11 @@ def test_service_container_uses_appsettings_combiner(monkeypatch, tmp_path):
         combiner_max_factors=4,
         combiner_min_sharpe=1.05,
         combiner_min_ic=0.06,
+        # 设置提供标志，表示这些参数是通过命令行提供的
+        _combiner_top_n_provided=True,
+        _combiner_max_factors_provided=True,
+        _combiner_min_sharpe_provided=True,
+        _combiner_min_ic_provided=True,
     )
     settings = AppSettings.from_cli_args(args)
     container = ServiceContainer(settings)

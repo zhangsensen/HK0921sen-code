@@ -102,8 +102,10 @@ def test_generate_combinations_raises_when_exceeding_maximum():
 
 
 def test_backtest_combination_with_numpy_returns_computes_expected_metrics():
-    returns_alpha = np.array([0.02, -0.01, 0.015, 0.005], dtype=float)
-    returns_beta = np.array([0.01, 0.0, -0.005, 0.008], dtype=float)
+    # Generate sufficient data points (25) to meet minimum requirements
+    np.random.seed(42)
+    returns_alpha = np.random.normal(0.01, 0.02, 25).astype(float)
+    returns_beta = np.random.normal(0.008, 0.015, 25).astype(float)
 
     combo = [
         {
@@ -111,12 +113,16 @@ def test_backtest_combination_with_numpy_returns_computes_expected_metrics():
             "timeframe": "1d",
             "returns": returns_alpha,
             "information_coefficient": 0.30,
+            "trades_count": 10,
+            "sharpe_ratio": 1.5,
         },
         {
             "factor": "beta",
             "timeframe": "4h",
             "returns": returns_beta,
             "information_coefficient": -0.10,
+            "trades_count": 8,
+            "sharpe_ratio": 1.2,
         },
     ]
 
@@ -169,7 +175,16 @@ def test_backtest_combination_returns_empty_when_no_valid_returns():
     ]
 
     combiner = MultiFactorCombiner("0700.HK", {})
-    assert combiner.backtest_combination(combo) == {}
+    result = combiner.backtest_combination(combo)
+    
+    # Should return error result with zero metrics
+    assert result["sharpe_ratio"] == 0.0
+    assert result["stability"] == 0.0
+    assert result["trades_count"] == 0
+    assert result["win_rate"] == 0.0
+    assert result["profit_factor"] == 0.0
+    assert result["max_drawdown"] == 0.0
+    assert "error" in result
 
 
 def test_discover_strategies_tracks_shortlist_and_sorts(monkeypatch):

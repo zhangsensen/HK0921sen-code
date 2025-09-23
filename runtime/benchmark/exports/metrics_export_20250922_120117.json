@@ -1,0 +1,237 @@
+[
+  {
+    "name": "discovery_phase1_error",
+    "value": 1.0,
+    "type": "counter",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.242567",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "error": "No data root provided for raw data loading"
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 0.015592813491821289,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.244909",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 1.03125,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.245937",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_error",
+    "value": 1.0,
+    "type": "counter",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.247344",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "error": "No data root provided for raw data loading"
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 0.001093149185180664,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.248400",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 0.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.249465",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_error",
+    "value": 1.0,
+    "type": "counter",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.250801",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "error": "No data root provided for raw data loading"
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 0.0011510848999023438,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.251919",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 0.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.253001",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_error",
+    "value": 1.0,
+    "type": "counter",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.254380",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "error": "No data root provided for raw data loading"
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 0.0011570453643798828,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.255515",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 0.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.256574",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_error",
+    "value": 1.0,
+    "type": "counter",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.257832",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "error": "No data root provided for raw data loading"
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 0.0011739730834960938,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.258978",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 0.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:01:17.260134",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  }
+]

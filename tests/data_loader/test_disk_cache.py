@@ -74,7 +74,7 @@ def test_load_from_disk_removes_corrupted_file(tmp_path, sample_frame, monkeypat
 
 
 def test_preload_timeframes_handles_failing_future(tmp_path, sample_frame):
-    frames = {"1m": sample_frame, "5m": sample_frame.resample("5min").agg("mean")}
+    frames = {"1m": sample_frame, "5m": sample_frame.copy()}
 
     def provider(symbol, timeframe):
         if timeframe == "5m":

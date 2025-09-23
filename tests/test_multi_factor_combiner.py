@@ -102,11 +102,13 @@ def test_select_top_factors_prioritizes_sharpe_and_ic():
 
 
 def test_combination_backtest_aligns_on_time_index():
-    index_fast = pd.date_range("2024-01-01", periods=5, freq="h")
-    index_slow = pd.date_range("2024-01-01 02:00", periods=4, freq="h")
+    # Generate sufficient data points (25) to meet minimum requirements
+    index_fast = pd.date_range("2024-01-01", periods=25, freq="h")
+    index_slow = pd.date_range("2024-01-01 02:00", periods=24, freq="h")
 
-    fast_returns = pd.Series([0.01, -0.005, 0.007, 0.002, 0.004], index=index_fast)
-    slow_returns = pd.Series([0.02, -0.01, 0.015, 0.005], index=index_slow)
+    np.random.seed(42)
+    fast_returns = pd.Series(np.random.normal(0.005, 0.01, 25), index=index_fast)
+    slow_returns = pd.Series(np.random.normal(0.007, 0.012, 24), index=index_slow)
 
     combo = [
         {
@@ -114,12 +116,16 @@ def test_combination_backtest_aligns_on_time_index():
             "timeframe": "1h",
             "returns": fast_returns,
             "information_coefficient": 0.1,
+            "trades_count": 15,
+            "sharpe_ratio": 1.2,
         },
         {
             "factor": "slow",
             "timeframe": "4h",
             "returns": slow_returns,
             "information_coefficient": 0.2,
+            "trades_count": 12,
+            "sharpe_ratio": 1.5,
         },
     ]
 
@@ -161,11 +167,13 @@ def test_combination_backtest_aligns_on_time_index():
 
 
 def test_combiner_uses_explicit_index_for_array_returns():
-    index_primary = pd.date_range("2024-02-01", periods=4, freq="D")
-    index_secondary = pd.date_range("2024-02-02", periods=4, freq="D")
+    # Generate sufficient data points (25) to meet minimum requirements
+    index_primary = pd.date_range("2024-02-01", periods=25, freq="D")
+    index_secondary = pd.date_range("2024-02-02", periods=25, freq="D")
 
-    returns_primary = np.array([0.01, -0.003, 0.005, 0.007], dtype=float)
-    returns_secondary = np.array([0.008, -0.004, 0.006, 0.01], dtype=float)
+    np.random.seed(42)
+    returns_primary = np.random.normal(0.005, 0.01, 25).astype(float)
+    returns_secondary = np.random.normal(0.007, 0.012, 25).astype(float)
 
     combo = [
         {
@@ -174,6 +182,8 @@ def test_combiner_uses_explicit_index_for_array_returns():
             "returns": returns_primary,
             "index": index_primary,
             "information_coefficient": 0.12,
+            "trades_count": 18,
+            "sharpe_ratio": 1.1,
         },
         {
             "factor": "secondary",
@@ -181,6 +191,8 @@ def test_combiner_uses_explicit_index_for_array_returns():
             "returns": returns_secondary,
             "timestamps": [ts.strftime("%Y-%m-%d") for ts in index_secondary],
             "information_coefficient": 0.09,
+            "trades_count": 16,
+            "sharpe_ratio": 1.3,
         },
     ]
 

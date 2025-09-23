@@ -50,6 +50,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--phase", choices=["phase1", "phase2", "both"], default="both")
     parser.add_argument("--reset", action="store_true", help="重置数据库")
     parser.add_argument(
+        "--config-file",
+        help="配置文件路径（默认: config.yaml）",
+    )
+    parser.add_argument(
         "--data-root",
         help="可选的本地数据目录，支持 symbol/timeframe.parquet 或 timeframe/symbol.parquet 布局",
     )

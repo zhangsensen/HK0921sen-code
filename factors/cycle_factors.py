@@ -37,7 +37,7 @@ def _cycle_phase(close: "pd.Series", window: int) -> "pd.Series":
 
 
 def _rsi_period(close: "pd.Series", base_period: int) -> "pd.Series":
-    volatility = close.pct_change().rolling(base_period).std(ddof=0)
+    volatility = close.pct_change(fill_method=None).rolling(base_period).std(ddof=0)
     return base_period * (1 + volatility)
 
 

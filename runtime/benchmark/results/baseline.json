@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-09-22T04:02:06.001328Z",
+  "benchmark_start": "2025-09-22T12:01:21.417768",
+  "samples": 5,
+  "successes": 0,
+  "success_rate": 0.0,
+  "metrics": {
+    "avg_duration": 8.916834408199065,
+    "median_duration": 8.92062525000074,
+    "p95_duration": 8.969334532797802,
+    "avg_success_duration": null,
+    "avg_cpu_time": 10.917716999999998,
+    "max_duration": 8.97749016599846,
+    "total_duration": 44.58417204099533,
+    "avg_peak_rss": 362.740625,
+    "max_peak_rss": 389.484375,
+    "avg_rss_delta": 51.684375,
+    "max_rss_delta": 231.578125,
+    "min_rss_delta": -71.328125
+  },
+  "config": {
+    "symbol": "0700.HK",
+    "phase": "both",
+    "parallel_mode": "off",
+    "db_path": "/Users/zhangshenshen/HK0920sen-code/benchmark_results/hk_factor_results.sqlite",
+    "async_batch_size": 8,
+    "monitoring_enabled": true
+  },
+  "runs": [
+    {
+      "index": 1,
+      "duration": 8.896454041998368,
+      "success": false,
+      "cpu_time": 10.899153,
+      "start_memory_mb": 91.171875,
+      "end_memory_mb": 322.75,
+      "error": "Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue."
+    },
+    {
+      "index": 2,
+      "duration": 8.85289058300259,
+      "success": false,
+      "cpu_time": 10.864359,
+      "start_memory_mb": 322.75,
+      "end_memory_mb": 362.390625,
+      "error": "Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue."
+    },
+    {
+      "index": 3,
+      "duration": 8.936711999995168,
+      "success": false,
+      "cpu_time": 10.946121999999999,
+      "start_memory_mb": 362.390625,
+      "end_memory_mb": 389.484375,
+      "error": "Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue."
+    },
+    {
+      "index": 4,
+      "duration": 8.97749016599846,
+      "success": false,
+      "cpu_time": 10.976000999999997,
+      "start_memory_mb": 389.484375,
+      "end_memory_mb": 318.15625,
+      "error": "Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue."
+    },
+    {
+      "index": 5,
+      "duration": 8.92062525000074,
+      "success": false,
+      "cpu_time": 10.902949999999997,
+      "start_memory_mb": 318.15625,
+      "end_memory_mb": 349.59375,
+      "error": "Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue."
+    }
+  ]
+}

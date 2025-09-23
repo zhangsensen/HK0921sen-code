@@ -1,0 +1,29 @@
+name,value,type,category,timestamp,tags,unit,session_id,metadata
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.885716,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 7, 'disk_writes': 11}"
+loader.disk_cache_rate,6.0,gauge,data_loading,2025-09-22T12:40:03.885806,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 7, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.886362,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 8, 'disk_writes': 11}"
+loader.disk_cache_rate,3.0,gauge,data_loading,2025-09-22T12:40:03.886394,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 8, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.886630,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 9, 'disk_writes': 11}"
+loader.disk_cache_rate,2.0,gauge,data_loading,2025-09-22T12:40:03.886670,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 9, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.886892,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 10, 'disk_writes': 11}"
+loader.disk_cache_rate,1.5,gauge,data_loading,2025-09-22T12:40:03.886955,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 10, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.887283,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 11, 'disk_writes': 11}"
+loader.disk_cache_rate,1.2,gauge,data_loading,2025-09-22T12:40:03.887332,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 11, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.887536,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 12, 'disk_writes': 11}"
+loader.disk_cache_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.887581,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 12, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.887798,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 13, 'disk_writes': 11}"
+loader.disk_cache_rate,0.8571428571428571,gauge,data_loading,2025-09-22T12:40:03.887836,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 13, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.888010,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 14, 'disk_writes': 11}"
+loader.disk_cache_rate,0.75,gauge,data_loading,2025-09-22T12:40:03.888060,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 14, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.888258,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 15, 'disk_writes': 11}"
+loader.disk_cache_rate,0.6666666666666666,gauge,data_loading,2025-09-22T12:40:03.888297,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 15, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.888504,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 16, 'disk_writes': 11}"
+loader.disk_cache_rate,0.6,gauge,data_loading,2025-09-22T12:40:03.888531,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 16, 'disk_writes': 11}"
+loader.cache_hit_rate,1.0,gauge,data_loading,2025-09-22T12:40:03.888708,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 17, 'disk_writes': 11}"
+loader.disk_cache_rate,0.5454545454545454,gauge,data_loading,2025-09-22T12:40:03.888729,"{'symbol': '0700.HK', 'mode': 'process'}",,,"{'source': 'preloaded', 'loads': 17, 'disk_writes': 11}"
+discovery_phase1_duration,8.28018593788147,timer,operation,2025-09-22T12:40:12.058294,"{'symbol': '0700.HK', 'parallel_mode': 'process', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,246.421875,gauge,operation,2025-09-22T12:40:12.059656,"{'symbol': '0700.HK', 'parallel_mode': 'process', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T12:40:12.060899,"{'symbol': '0700.HK', 'parallel_mode': 'process', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_duration,0.054483890533447266,timer,operation,2025-09-22T12:40:12.115529,"{'symbol': '0700.HK', 'parallel_mode': 'process', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,0.34375,gauge,operation,2025-09-22T12:40:12.116641,"{'symbol': '0700.HK', 'parallel_mode': 'process', 'phase': 'phase2'}",MB,,
+discovery_phase2_result_count,105.0,gauge,operation,2025-09-22T12:40:12.117877,"{'symbol': '0700.HK', 'parallel_mode': 'process', 'phase': 'phase2'}",,,{'executed': True}

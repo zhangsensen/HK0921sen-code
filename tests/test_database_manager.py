@@ -39,6 +39,7 @@ def test_database_roundtrip(tmp_path):
             "symbol": "0700.HK",
             "strategy_name": "factor_a+factor_b",
             "factors": ["factor_a", "factor_b"],
+            "timeframes": ["1m", "5m"],
             "sharpe_ratio": 1.1,
             "stability": 0.7,
             "trades_count": 5,
@@ -53,4 +54,5 @@ def test_database_roundtrip(tmp_path):
     loaded_strategies = manager.load_combination_strategies("0700.HK")
     assert loaded_strategies
     assert loaded_strategies[0].factor_combination == ["factor_a", "factor_b"]
+    assert loaded_strategies[0].timeframes == ["1m", "5m"]
     assert loaded_strategies[0].average_information_coefficient == pytest.approx(0.06)

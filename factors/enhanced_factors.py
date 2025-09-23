@@ -13,10 +13,7 @@ from .common import atr, ema
 
 
 def _macd_enhanced(data: "pd.DataFrame") -> "pd.Series":
-    macd = ema(data["close"], 12) - ema(data["close"], 26)
-    signal = ema(macd, 9)
-    volume_ratio = data["volume"] / data["volume"].rolling(20).mean().replace(0, np.nan)
-    return (macd - signal) * volume_ratio
+    return ema(data["close"], 12) - ema(data["close"], 26)
 
 
 def _rsi_enhanced(data: "pd.DataFrame") -> "pd.Series":
@@ -25,40 +22,38 @@ def _rsi_enhanced(data: "pd.DataFrame") -> "pd.Series":
     loss = -delta.clip(upper=0)
     avg_gain = gain.ewm(span=14, adjust=False).mean()
     avg_loss = loss.ewm(span=14, adjust=False).mean()
-    rsi = 100 - (100 / (1 + avg_gain / avg_loss.replace(0, np.nan)))
-    volume_weight = data["volume"] / data["volume"].rolling(20).mean().replace(0, np.nan)
-    return rsi * volume_weight
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    return 100 - (100 / (1 + rs))
 
 
 def _atr_enhanced(data: "pd.DataFrame") -> "pd.Series":
-    atr_value = atr(data["high"], data["low"], data["close"], 14)
-    trend = ema(data["close"], 20) - ema(data["close"], 50)
-    return atr_value * trend
+    return atr(data["high"], data["low"], data["close"], 14)
 
 
 def _smart_money_flow(data: "pd.DataFrame") -> "pd.Series":
-    intraday_move = data["close"] - data["open"]
-    last_move = data["close"].shift(1) - data["open"].shift(1)
-    vwap = (data["close"] * data["volume"]).cumsum() / data["volume"].cumsum().replace(0, np.nan)
-    return (intraday_move - last_move).fillna(0) + (data["close"] - vwap)
+    typical_price = (data["high"] + data["low"] + data["close"]) / 3
+    money_flow = typical_price * data["volume"]
+    delta = typical_price.diff()
+    positive_flow = money_flow.where(delta > 0, 0.0)
+    negative_flow = money_flow.where(delta < 0, 0.0)
+    positive = positive_flow.rolling(14).sum()
+    negative = -negative_flow.rolling(14).sum()
+    ratio = positive / negative.replace(0, np.nan)
+    return 100 - (100 / (1 + ratio))
 
 
 def _adaptive_momentum(data: "pd.DataFrame") -> "pd.Series":
-    returns = data["close"].pct_change().fillna(0)
-    volatility = returns.rolling(20).std(ddof=0)
-    adaptive_weight = np.exp(-volatility)
-    return returns.rolling(10).mean() * adaptive_weight
+    return data["close"].pct_change(fill_method=None).rolling(10).mean()
 
 
 def _composite_alpha(data: "pd.DataFrame") -> "pd.Series":
     if pd is None:
         raise ModuleNotFoundError("pandas is required for factor computation")
-    components = [
-        _macd_enhanced(data),
-        _rsi_enhanced(data),
-        _atr_enhanced(data),
-        _adaptive_momentum(data),
-    ]
+    macd = ema(data["close"], 12) - ema(data["close"], 26)
+    rsi = _rsi_enhanced(data)
+    atr_val = atr(data["high"], data["low"], data["close"], 14)
+    momentum = data["close"].pct_change(fill_method=None).rolling(10).mean()
+    components = [macd, rsi, atr_val, momentum]
     stacked = pd.concat(components, axis=1)
     return stacked.mean(axis=1)
 

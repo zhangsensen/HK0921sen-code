@@ -1,0 +1,15 @@
+{
+  "name": "discovery_phase1_memory_delta",
+  "value": 97.03125,
+  "type": "gauge",
+  "category": "operation",
+  "timestamp": "2025-09-23T00:26:56.960422",
+  "tags": {
+    "symbol": "0700.HK",
+    "parallel_mode": "off",
+    "phase": "phase1"
+  },
+  "unit": "MB",
+  "session_id": null,
+  "metadata": null
+}

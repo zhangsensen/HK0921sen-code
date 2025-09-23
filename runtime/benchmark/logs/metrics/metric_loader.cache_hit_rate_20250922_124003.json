@@ -1,0 +1,18 @@
+{
+  "name": "loader.cache_hit_rate",
+  "value": 1.0,
+  "type": "gauge",
+  "category": "data_loading",
+  "timestamp": "2025-09-22T12:40:03.887283",
+  "tags": {
+    "symbol": "0700.HK",
+    "mode": "process"
+  },
+  "unit": null,
+  "session_id": null,
+  "metadata": {
+    "source": "preloaded",
+    "loads": 11,
+    "disk_writes": 11
+  }
+}

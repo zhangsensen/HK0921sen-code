@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-09-22T04:02:39.518268Z",
+  "benchmark_start": "2025-09-22T12:02:12.501825",
+  "samples": 3,
+  "successes": 3,
+  "success_rate": 1.0,
+  "metrics": {
+    "avg_duration": 9.005553221994584,
+    "median_duration": 8.983926332992269,
+    "p95_duration": 9.1407742083029,
+    "avg_success_duration": 9.005553221994584,
+    "avg_cpu_time": 10.938916666666668,
+    "max_duration": 9.158201750004082,
+    "total_duration": 27.016659665983752,
+    "avg_peak_rss": 323.6197916666667,
+    "max_peak_rss": 325.28125,
+    "avg_rss_delta": 76.27604166666667,
+    "max_rss_delta": 233.8125,
+    "min_rss_delta": -38.171875
+  },
+  "config": {
+    "symbol": "0700.HK",
+    "phase": "both",
+    "parallel_mode": "off",
+    "db_path": "/Users/zhangshenshen/HK0920sen-code/benchmark_results/hk_factor_results.sqlite",
+    "async_batch_size": 8,
+    "monitoring_enabled": true
+  },
+  "runs": [
+    {
+      "index": 1,
+      "duration": 8.874531582987402,
+      "success": true,
+      "cpu_time": 10.880372000000001,
+      "start_memory_mb": 91.46875,
+      "end_memory_mb": 325.28125,
+      "error": null
+    },
+    {
+      "index": 2,
+      "duration": 9.158201750004082,
+      "success": true,
+      "cpu_time": 10.996851999999999,
+      "start_memory_mb": 325.28125,
+      "end_memory_mb": 287.109375,
+      "error": null
+    },
+    {
+      "index": 3,
+      "duration": 8.983926332992269,
+      "success": true,
+      "cpu_time": 10.939526,
+      "start_memory_mb": 287.109375,
+      "end_memory_mb": 320.296875,
+      "error": null
+    }
+  ]
+}

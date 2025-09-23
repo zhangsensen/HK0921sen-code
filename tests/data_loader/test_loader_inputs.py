@@ -22,7 +22,7 @@ def test_load_raw_skips_unknown_extensions(tmp_path, sample_frame):
 
     loader = HistoricalDataLoader(data_root=tmp_path)
 
-    with pytest.raises(FileNotFoundError, match="Parquet/CSV"):
+    with pytest.raises(FileNotFoundError, match="Missing data file"):
         loader.load("0700.HK", "1m")
 
     # Ensure the placeholder file is untouched for manual inspection/debugging.

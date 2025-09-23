@@ -1,0 +1,17 @@
+{
+  "name": "discovery_phase1_result_count",
+  "value": 792.0,
+  "type": "gauge",
+  "category": "operation",
+  "timestamp": "2025-09-22T11:34:26.550801",
+  "tags": {
+    "symbol": "0700.HK",
+    "parallel_mode": "off",
+    "phase": "phase1"
+  },
+  "unit": null,
+  "session_id": null,
+  "metadata": {
+    "executed": true
+  }
+}

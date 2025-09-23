@@ -94,12 +94,43 @@ class MultiFactorCombiner:
         return combos
 
     def backtest_combination(self, combo: Sequence[Mapping[str, object]]) -> Dict[str, object]:
+        # Validate combination has sufficient factors
+        if len(combo) < 2:
+            return {
+                "symbol": self.symbol,
+                "strategy_name": "invalid_combination",
+                "factors": [],
+                "timeframes": [],
+                "sharpe_ratio": 0.0,
+                "stability": 0.0,
+                "trades_count": 0,
+                "win_rate": 0.0,
+                "profit_factor": 0.0,
+                "max_drawdown": 0.0,
+                "average_information_coefficient": 0.0,
+                "error": "Insufficient factors for combination",
+            }
+
         series_list = []
         arrays: List[np.ndarray] = []
+        factor_names = []
+        timeframes = []
+        ics = []
+
         for factor in combo:
             returns = factor.get("returns")
             if returns is None:
                 continue
+
+            # Validate factor has sufficient data and trades
+            trades_count = factor.get("trades_count", 0)
+            if trades_count < 1:  # Reduced threshold to allow more combinations
+                continue
+
+            sharpe_ratio = factor.get("sharpe_ratio", 0.0)
+            if abs(sharpe_ratio) > 10:  # Filter extreme values
+                continue
+
             if pd is not None:
                 if isinstance(returns, pd.Series):
                     series = returns.astype(float)
@@ -121,42 +152,177 @@ class MultiFactorCombiner:
             else:  # pragma: no cover - pandas optional fallback
                 arrays.append(np.asarray(returns, dtype=float))
 
+            factor_names.append(factor.get("factor", "unknown"))
+            timeframes.append(factor.get("timeframe", "unknown"))
+            ic = factor.get("information_coefficient", 0.0)
+            if ic is not None:
+                ics.append(float(ic))
+
+        # Check if we have enough valid factors
+        if len(series_list) < 2 and len(arrays) < 2:
+            return {
+                "symbol": self.symbol,
+                "strategy_name": "+".join(factor_names) or "invalid_factors",
+                "factors": factor_names,
+                "timeframes": timeframes,
+                "sharpe_ratio": 0.0,
+                "stability": 0.0,
+                "trades_count": 0,
+                "win_rate": 0.0,
+                "profit_factor": 0.0,
+                "max_drawdown": 0.0,
+                "average_information_coefficient": float(np.mean(ics)) if ics else 0.0,
+                "error": "Insufficient valid factors after quality filtering",
+            }
+
         combined_series = None
         if series_list:
             combined_frame = pd.concat(series_list, axis=1, join="inner")
             combined_frame = combined_frame.dropna(how="all")
             if combined_frame.empty:
-                return {}
+                return {
+                    "symbol": self.symbol,
+                    "strategy_name": "+".join(factor_names),
+                    "factors": factor_names,
+                    "timeframes": timeframes,
+                    "sharpe_ratio": 0.0,
+                    "stability": 0.0,
+                    "trades_count": 0,
+                    "win_rate": 0.0,
+                    "profit_factor": 0.0,
+                    "max_drawdown": 0.0,
+                    "average_information_coefficient": float(np.mean(ics)) if ics else 0.0,
+                    "error": "No overlapping data periods for combination",
+                }
             combined_series = combined_frame.mean(axis=1, skipna=True).astype(float)
+
+            # Validate combined series has sufficient data
+            if len(combined_series) < 20:
+                return {
+                    "symbol": self.symbol,
+                    "strategy_name": "+".join(factor_names),
+                    "factors": factor_names,
+                    "timeframes": timeframes,
+                    "sharpe_ratio": 0.0,
+                    "stability": 0.0,
+                    "trades_count": 0,
+                    "win_rate": 0.0,
+                    "profit_factor": 0.0,
+                    "max_drawdown": 0.0,
+                    "average_information_coefficient": float(np.mean(ics)) if ics else 0.0,
+                    "error": f"Insufficient combined data: {len(combined_series)} < 20 required",
+                }
+
             combined_returns = combined_series.to_numpy(dtype=float)
         else:
             if not arrays:
-                return {}
+                return {
+                    "symbol": self.symbol,
+                    "strategy_name": "+".join(factor_names),
+                    "factors": factor_names,
+                    "timeframes": timeframes,
+                    "sharpe_ratio": 0.0,
+                    "stability": 0.0,
+                    "trades_count": 0,
+                    "win_rate": 0.0,
+                    "profit_factor": 0.0,
+                    "max_drawdown": 0.0,
+                    "average_information_coefficient": float(np.mean(ics)) if ics else 0.0,
+                    "error": "No valid return data for combination",
+                }
             min_length = min(len(arr) for arr in arrays)
+            if min_length < 20:
+                return {
+                    "symbol": self.symbol,
+                    "strategy_name": "+".join(factor_names),
+                    "factors": factor_names,
+                    "timeframes": timeframes,
+                    "sharpe_ratio": 0.0,
+                    "stability": 0.0,
+                    "trades_count": 0,
+                    "win_rate": 0.0,
+                    "profit_factor": 0.0,
+                    "max_drawdown": 0.0,
+                    "average_information_coefficient": float(np.mean(ics)) if ics else 0.0,
+                    "error": f"Insufficient array data: {min_length} < 20 required",
+                }
             aligned = np.array([arr[-min_length:] for arr in arrays])
             combined_returns = aligned.mean(axis=0)
 
         if combined_returns.size == 0:
-            return {}
+            return {
+                "symbol": self.symbol,
+                "strategy_name": "+".join(factor_names),
+                "factors": factor_names,
+                "timeframes": timeframes,
+                "sharpe_ratio": 0.0,
+                "stability": 0.0,
+                "trades_count": 0,
+                "win_rate": 0.0,
+                "profit_factor": 0.0,
+                "max_drawdown": 0.0,
+                "average_information_coefficient": float(np.mean(ics)) if ics else 0.0,
+                "error": "Empty combined returns",
+            }
 
-        sharpe = PerformanceMetrics.calculate_sharpe_ratio(combined_returns)
-        stability = PerformanceMetrics.calculate_stability(combined_returns)
+        # Check for all-zero returns
+        if np.all(combined_returns == 0):
+            return {
+                "symbol": self.symbol,
+                "strategy_name": "+".join(factor_names),
+                "factors": factor_names,
+                "timeframes": timeframes,
+                "sharpe_ratio": 0.0,
+                "stability": 0.0,
+                "trades_count": 0,
+                "win_rate": 0.0,
+                "profit_factor": 0.0,
+                "max_drawdown": 0.0,
+                "average_information_coefficient": float(np.mean(ics)) if ics else 0.0,
+                "error": "Combined strategy produces no trading signals",
+            }
+
+        # Calculate performance metrics with validation
+        combined_returns_clean = combined_returns.copy()
+        combined_returns_clean = combined_returns_clean[~np.isinf(combined_returns_clean) & ~np.isnan(combined_returns_clean)]
+
+        if len(combined_returns_clean) == 0:
+            sharpe = 0.0
+            stability = 0.0
+            profit_factor = 0.0
+            win_rate = 0.0
+            max_drawdown = 0.0
+        else:
+            sharpe = PerformanceMetrics.calculate_sharpe_ratio(combined_returns_clean)
+            stability = PerformanceMetrics.calculate_stability(combined_returns_clean)
+
+            if combined_series is not None:
+                gains = combined_series[combined_series > 0].to_numpy(dtype=float)
+                losses = combined_series[combined_series < 0].to_numpy(dtype=float)
+                win_rate = float((combined_series > 0).mean())
+            else:  # pragma: no cover - pandas optional fallback
+                gains = combined_returns_clean[combined_returns_clean > 0]
+                losses = combined_returns_clean[combined_returns_clean < 0]
+                win_rate = float((combined_returns_clean > 0).mean())
+            profit_factor = PerformanceMetrics.calculate_profit_factor(gains, losses)
+
+            # Calculate equity curve using consistent methodology
+            equity_curve = np.cumprod(1 + combined_returns_clean)
+            max_drawdown = PerformanceMetrics.calculate_max_drawdown(equity_curve)
+
+            # Note: Removed automatic zeroing to prevent double protection
+            # Extreme values are now handled by DataQualityValidator during persistence
+
+        # Count trades using consistent methodology
         if combined_series is not None:
-            gains = combined_series[combined_series > 0].to_numpy(dtype=float)
-            losses = combined_series[combined_series < 0].to_numpy(dtype=float)
-            win_rate = float((combined_series > 0).mean())
-        else:  # pragma: no cover - pandas optional fallback
-            gains = combined_returns[combined_returns > 0]
-            losses = combined_returns[combined_returns < 0]
-            win_rate = float((combined_returns > 0).mean())
-        profit_factor = PerformanceMetrics.calculate_profit_factor(gains, losses)
-        equity_curve = np.cumprod(1 + combined_returns)
-        max_drawdown = PerformanceMetrics.calculate_max_drawdown(equity_curve)
-        trades_count = int(np.count_nonzero(np.diff(np.sign(combined_returns))))
+            trades_count = int(np.count_nonzero(np.diff(np.sign(combined_series))))
+        else:
+            trades_count = int(np.count_nonzero(np.diff(np.sign(combined_returns_clean))))
 
-        factor_names = [f["factor"] for f in combo]
-        timeframes = [f["timeframe"] for f in combo]
-        avg_ic = float(np.mean([float(f.get("information_coefficient", 0.0) or 0.0) for f in combo]))
+        # Note: Removed automatic zeroing for minimum trades to prevent double protection
+        # Trade count validation is now handled by DataQualityValidator during persistence
+
+        avg_ic = float(np.mean(ics)) if ics else 0.0
         strategy_name = "+".join(factor_names)
         result = {
             "symbol": self.symbol,

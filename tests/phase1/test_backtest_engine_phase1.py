@@ -8,20 +8,23 @@ from utils.performance_metrics import PerformanceMetrics
 
 
 def _build_phase1_fixture():
-    index = pd.date_range("2024-03-01 09:30", periods=6, freq="1min")
-    close = pd.Series([100.0, 101.0, 99.0, 102.0, 101.0, 103.0], index=index)
+    periods = 40
+    index = pd.date_range("2024-03-01 09:30", periods=periods, freq="1min")
+    close_values = [100.0, 101.0, 99.0, 102.0, 101.0, 103.0] + [102.5 + (i % 3) for i in range(periods - 6)]
+    close = pd.Series(close_values[:periods], index=index)
     data = pd.DataFrame(
         {
             "open": close,
             "high": close + 0.5,
             "low": close - 0.5,
             "close": close,
-            "volume": [1000, 1100, 900, 1200, 950, 1300],
+            "volume": [1000 + (i * 10) for i in range(periods)],
         },
         index=index,
     )
     # Missing the first timestamp to trigger the reindex branch and include NaNs.
-    signals = pd.Series([1.0, np.nan, -1.0, -1.0, 0.5], index=index[1:])
+    signal_values = [1.0, np.nan, -1.0, -1.0, 0.5] + [0.5] * (periods - 6)
+    signals = pd.Series(signal_values, index=index[1:])
     return data, signals
 
 
@@ -41,7 +44,7 @@ def test_backtest_engine_phase1_metrics_with_nan_and_reindex(monkeypatch):
 
     aligned_signals = signals.reindex(data.index).astype(float).fillna(0.0)
     positions = aligned_signals.shift(1).fillna(0.0) * engine.allocation
-    returns = data["close"].pct_change().fillna(0.0).astype(float)
+    returns = data["close"].pct_change(fill_method=None).fillna(0.0).astype(float)
     raw_strategy_returns = (returns * positions).astype(float)
     previous_positions = positions.shift(1).fillna(0.0)
     trade_changes = (positions - previous_positions).abs()
@@ -91,5 +94,11 @@ def test_backtest_engine_phase1_metrics_with_nan_and_reindex(monkeypatch):
         expected_cost_drag,
         check_names=False,
     )
+
+    diagnostics = result.get("diagnostics", [])
+    if result["trades_count"] < engine.MIN_TRADES_FOR_CONFIDENT_METRICS:
+        assert any("insufficient_trades" in entry for entry in diagnostics)
+    else:
+        assert diagnostics == []
 
     assert not signals.index.equals(data.index)

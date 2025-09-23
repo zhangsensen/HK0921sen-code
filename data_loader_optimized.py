@@ -13,6 +13,8 @@ except ModuleNotFoundError:  # pragma: no cover - surfaced via base class errors
     pd = None
 
 from data_loader import HistoricalDataLoader
+from utils.monitoring.models import MetricCategory, MetricType
+from utils.monitoring.runtime import PerformanceMonitor
 
 
 class OptimizedDataLoader(HistoricalDataLoader):
@@ -24,6 +26,9 @@ class OptimizedDataLoader(HistoricalDataLoader):
         max_workers: Optional[int] = None,
         preload: bool = True,
         cache_dir: Path | str | None = None,
+        monitor: PerformanceMonitor | None = None,
+        monitor_tags: Optional[Dict[str, str]] = None,
+        cache_hit_alert_threshold: float | None = 0.6,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -40,6 +45,10 @@ class OptimizedDataLoader(HistoricalDataLoader):
         self.cache_dir = Path(cache_dir).expanduser() if cache_dir else None
         if self.cache_dir:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.monitor = monitor
+        self.monitor_tags = monitor_tags or {}
+        self._alert_threshold = cache_hit_alert_threshold
+        self._load_count = 0
 
     # ------------------------------------------------------------------
     def _cache_path(self, symbol: str, timeframe: str) -> Path:
@@ -111,15 +120,18 @@ class OptimizedDataLoader(HistoricalDataLoader):
                 data = self._preloaded.pop(key, None)
             if data is not None:
                 self._stats["preload_hits"] += 1
+                self._record_metrics("preloaded")
                 return data
             self._stats["preload_misses"] += 1
         if self.cache_dir:
             cached = self._load_from_disk(symbol, timeframe)
             if cached is not None:
+                self._record_metrics("disk")
                 return cached
         result = super().load(symbol, timeframe)
         if self.cache_dir:
             self._store_to_disk(symbol, timeframe, result)
+        self._record_metrics("load")
         return result
 
     # ------------------------------------------------------------------
@@ -164,6 +176,40 @@ class OptimizedDataLoader(HistoricalDataLoader):
 
     def close(self) -> None:
         self._executor.shutdown(wait=True)
+
+    # ------------------------------------------------------------------
+    def _record_metrics(self, source: str) -> None:
+        self._load_count += 1
+        if self.monitor is None:
+            return
+        total_requests = self._stats["preload_hits"] + self._stats["preload_misses"]
+        if total_requests <= 0:
+            return
+        hit_rate = self._stats["preload_hits"] / total_requests
+        disk_rate = self._stats["disk_hits"] / total_requests
+        metadata = {
+            "source": source,
+            "loads": self._load_count,
+            "disk_writes": self._stats["disk_writes"],
+        }
+        if self._alert_threshold is not None and hit_rate < self._alert_threshold:
+            metadata["alert"] = True
+        self.monitor.record_metric(
+            name="loader.cache_hit_rate",
+            value=float(hit_rate),
+            metric_type=MetricType.GAUGE,
+            category=MetricCategory.DATA_LOADING,
+            tags=self.monitor_tags,
+            metadata=metadata,
+        )
+        self.monitor.record_metric(
+            name="loader.disk_cache_rate",
+            value=float(disk_rate),
+            metric_type=MetricType.GAUGE,
+            category=MetricCategory.DATA_LOADING,
+            tags=self.monitor_tags,
+            metadata=metadata,
+        )
 
 
 def create_optimized_loader(*args, **kwargs) -> OptimizedDataLoader:

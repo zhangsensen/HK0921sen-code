@@ -1,0 +1,15 @@
+{
+  "name": "discovery_phase1_duration",
+  "value": 8.108975887298584,
+  "type": "timer",
+  "category": "operation",
+  "timestamp": "2025-09-21T20:01:33.793927",
+  "tags": {
+    "symbol": "0700.HK",
+    "parallel_mode": "process",
+    "phase": "phase1"
+  },
+  "unit": "seconds",
+  "session_id": null,
+  "metadata": null
+}

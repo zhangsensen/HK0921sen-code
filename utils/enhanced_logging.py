@@ -503,7 +503,7 @@ if __name__ == "__main__":
     logger.log_factor_computation("ma_5", "0700.HK", "1m", 0.023, context)
 
     # 性能跟踪
-    metrics = logger.start_performance_tracking(LogCategory.DATA_LOADING, "resample_data", context)
+    metrics = logger.start_performance_tracking(LogCategory.DATA_LOADING, "load_data", context)
     time.sleep(0.1)  # 模拟操作
     logger.end_performance_tracking(metrics)
 

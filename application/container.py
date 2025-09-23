@@ -52,12 +52,19 @@ class ServiceContainer:
                 cache_dir = None
                 if self.settings.data_root is not None:
                     cache_dir = Path(self.settings.data_root) / ".optimized_cache"
+                monitor = self.performance_monitor()
+                monitor_tags = {
+                    "symbol": self.settings.symbol,
+                    "mode": self.settings.parallel_mode,
+                }
                 return LoaderType(
                     data_root=self.settings.data_root,
                     cache_backend=cache,
                     cache_ttl=self.settings.cache_ttl,
                     max_workers=self.settings.max_workers,
                     cache_dir=cache_dir,
+                    monitor=monitor,
+                    monitor_tags=monitor_tags if monitor else None,
                 )
 
             return self.resolve(LoaderType, factory)

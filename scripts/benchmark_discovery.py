@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import json
+import math
 import statistics
 import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -68,6 +70,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--fail-fast",
         action="store_true",
         help="Abort on the first failing sample instead of completing all runs.",
+    )
+    parser.add_argument(
+        "--report-path",
+        default="runtime/benchmark/results/latest.json",
+        help="Write run summary JSON to the given path (default: runtime/benchmark/results/latest.json).",
+    )
+    parser.add_argument(
+        "--baseline-report",
+        help="Optional benchmark report JSON used for comparison.",
     )
 
     # Force monitoring to be enabled with benchmark-friendly directories by default.
@@ -147,6 +158,20 @@ def _format_seconds(value: float | None) -> str:
     return f"{value:.2f}s"
 
 
+def _percentile(values: Sequence[float], percent: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    rank = (len(ordered) - 1) * percent / 100.0
+    low = math.floor(rank)
+    high = math.ceil(rank)
+    if low == high:
+        return ordered[int(rank)]
+    lower = ordered[low]
+    upper = ordered[high]
+    return lower + (upper - lower) * (rank - low)
+
+
 def _ensure_monitor(settings: AppSettings, container: ServiceContainer) -> PerformanceMonitor:
     monitor = container.performance_monitor()
     if monitor is None:
@@ -207,59 +232,188 @@ def _run_samples(
     return results
 
 
-def _summarise_runs(results: Sequence[RunResult]) -> None:
+def _build_summary(
+    results: Sequence[RunResult],
+    settings: AppSettings,
+    benchmark_start: datetime,
+) -> Dict[str, object]:
+    total = len(results)
+    successes = sum(1 for result in results if result.success)
+    success_rate = successes / total if total else 0.0
+    durations = [result.duration for result in results]
+    success_durations = [result.duration for result in results if result.success]
+    cpu_times = [result.cpu_time for result in results if result.cpu_time is not None]
+
+    metrics = {
+        "avg_duration": _average(durations),
+        "median_duration": statistics.median(durations) if durations else None,
+        "p95_duration": _percentile(durations, 95),
+        "avg_success_duration": _average(success_durations),
+        "avg_cpu_time": _average(cpu_times),
+        "max_duration": max(durations) if durations else None,
+        "total_duration": sum(durations) if durations else None,
+    }
+
+    peaks = [
+        _peak_memory_value(result.start_memory_mb, result.end_memory_mb)
+        for result in results
+    ]
+    peaks = [peak for peak in peaks if peak is not None]
+    if peaks:
+        metrics["avg_peak_rss"] = _average(peaks)
+        metrics["max_peak_rss"] = max(peaks)
+
+    delta_values = [
+        result.end_memory_mb - result.start_memory_mb
+        for result in results
+        if result.start_memory_mb is not None and result.end_memory_mb is not None
+    ]
+    if delta_values:
+        metrics["avg_rss_delta"] = _average(delta_values)
+        metrics["max_rss_delta"] = max(delta_values)
+        metrics["min_rss_delta"] = min(delta_values)
+
+    return {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "benchmark_start": benchmark_start.isoformat(),
+        "samples": total,
+        "successes": successes,
+        "success_rate": success_rate,
+        "metrics": metrics,
+        "config": {
+            "symbol": settings.symbol,
+            "phase": settings.phase,
+            "parallel_mode": settings.parallel_mode,
+            "db_path": str(settings.db_path),
+            "async_batch_size": settings.async_batch_size,
+            "monitoring_enabled": bool(settings.monitoring),
+        },
+        "runs": [
+            {
+                "index": result.index,
+                "duration": result.duration,
+                "success": result.success,
+                "cpu_time": result.cpu_time,
+                "start_memory_mb": result.start_memory_mb,
+                "end_memory_mb": result.end_memory_mb,
+                "error": result.error,
+            }
+            for result in results
+        ],
+    }
+
+
+def _compare_with_baseline(
+    current: Dict[str, object],
+    baseline: Dict[str, object],
+) -> Dict[str, Dict[str, float]]:
+    comparison: Dict[str, Dict[str, float]] = {}
+    current_metrics = current.get("metrics", {}) if isinstance(current, dict) else {}
+    baseline_metrics = baseline.get("metrics", {}) if isinstance(baseline, dict) else {}
+    for key in ("avg_duration", "median_duration", "p95_duration", "avg_cpu_time"):
+        current_value = current_metrics.get(key)
+        baseline_value = baseline_metrics.get(key)
+        if current_value is None or baseline_value in (None, 0):
+            continue
+        delta = current_value - baseline_value
+        delta_pct = delta / baseline_value
+        comparison[key] = {
+            "baseline": baseline_value,
+            "current": current_value,
+            "delta": delta,
+            "delta_pct": delta_pct,
+        }
+    return comparison
+
+
+def _write_report(summary: Dict[str, object], path: str) -> Path:
+    report_path = Path(path)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return report_path
+
+
+def _load_baseline(path: Optional[str]) -> Optional[Dict[str, object]]:
+    if not path:
+        return None
+    baseline_path = Path(path)
+    if not baseline_path.exists():
+        print(f"⚠️  Baseline report not found: {baseline_path}")
+        return None
+    try:
+        return json.loads(baseline_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"⚠️  Unable to parse baseline report {baseline_path}: {exc}")
+        return None
+
+
+def _print_run_summary(
+    summary: Dict[str, object],
+    results: Sequence[RunResult],
+    comparison: Optional[Dict[str, Dict[str, float]]],
+) -> None:
     total = len(results)
     if total == 0:
         print("No benchmark samples were executed.")
         return
 
-    successes = sum(1 for result in results if result.success)
-    success_rate = successes / total if total else 0.0
-    avg_all = _average(result.duration for result in results)
-    avg_success = _average(result.duration for result in results if result.success)
+    successes = summary.get("successes", 0)
+    success_rate = summary.get("success_rate", 0.0)
+    metrics = summary.get("metrics", {}) if isinstance(summary, dict) else {}
 
     print("\n=== Benchmark Summary ===")
     print(f"Total runs: {total}")
     print(f"Successful runs: {successes}/{total} ({success_rate:.0%})")
+    avg_all = metrics.get("avg_duration")
     if avg_all is not None:
         print(f"Average duration (all runs): {_format_seconds(avg_all)}")
+    avg_success = metrics.get("avg_success_duration")
     if avg_success is not None:
         print(f"Average duration (successful runs): {_format_seconds(avg_success)}")
 
-    cpu_avg = _average(result.cpu_time for result in results if result.cpu_time is not None)
+    cpu_avg = metrics.get("avg_cpu_time")
     if cpu_avg is not None:
         print(f"Average CPU time (per run): {cpu_avg:.2f}s")
 
-    peaks = [
-        peak
-        for peak in (
-            _peak_memory_value(result.start_memory_mb, result.end_memory_mb) for result in results
+    if metrics.get("avg_peak_rss") is not None:
+        max_peak = metrics.get("max_peak_rss", 0.0)
+        print(
+            f"Average peak RSS: {metrics['avg_peak_rss']:.1f}MB (max {max_peak:.1f}MB)"
         )
-        if peak is not None
-    ]
-    if peaks:
-        peak_avg = _average(peaks)
-        if peak_avg is not None:
-            print(f"Average peak RSS: {peak_avg:.1f}MB (max {max(peaks):.1f}MB)")
-
-    deltas = [
-        result.end_memory_mb - result.start_memory_mb
-        for result in results
-        if result.start_memory_mb is not None and result.end_memory_mb is not None
-    ]
-    if deltas:
-        delta_avg = _average(deltas)
-        if delta_avg is not None:
-            print(
-                "Average RSS delta: "
-                f"{delta_avg:+.1f}MB (max {max(deltas):+.1f}MB, min {min(deltas):+.1f}MB)"
-            )
+    if metrics.get("avg_rss_delta") is not None:
+        print(
+            "Average RSS delta: "
+            f"{metrics['avg_rss_delta']:+.1f}MB "
+            f"(max {metrics.get('max_rss_delta', 0.0):+.1f}MB, "
+            f"min {metrics.get('min_rss_delta', 0.0):+.1f}MB)"
+        )
 
     failures = [result for result in results if not result.success and result.error]
     if failures:
         print("Failures detected:")
         for failure in failures:
             print(f"  - Run {failure.index}: {failure.error}")
+
+    if comparison:
+        print("\n=== Comparison vs baseline ===")
+        for key, payload in comparison.items():
+            delta_pct = payload["delta_pct"] * 100
+            direction = "faster" if delta_pct < 0 else "slower"
+            print(
+                f"{key}: {payload['current']:.3f}s (baseline {payload['baseline']:.3f}s, "
+                f"Δ {payload['delta']:.3f}s, {delta_pct:+.1f}% {direction})"
+            )
+        avg_change = comparison.get("avg_duration")
+        if avg_change:
+            improvement = -avg_change["delta_pct"] * 100
+            if improvement >= 20:
+                print("✅ Average duration meets the expected ≥20% improvement target.")
+            elif improvement > 0:
+                print(
+                    "⚠️  Improvement below 20%; consider collecting more samples or reviewing configuration."
+                )
+            elif improvement < 0:
+                print("❌ Benchmark slower than baseline. Investigate recent changes.")
 
 
 def _summarise_phase_metrics(
@@ -327,9 +481,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     monitor = _ensure_monitor(settings, container)
 
     benchmark_start = datetime.now()
+    baseline_report = _load_baseline(args.baseline_report)
+
     try:
         results = _run_samples(settings, container, args.samples, args.fail_fast)
-        _summarise_runs(results)
+        summary = _build_summary(results, settings, benchmark_start)
+        comparison = _compare_with_baseline(summary, baseline_report) if baseline_report else None
+        if comparison:
+            summary["comparison"] = comparison
+        _print_run_summary(summary, results, comparison)
         _summarise_phase_metrics(monitor, settings, benchmark_start)
 
         exported_paths = _export_metrics(
@@ -342,6 +502,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             print("\nMetric exports:")
             for path in exported_paths:
                 print(f"  - {path}")
+
+        if args.report_path:
+            report_path = _write_report(summary, args.report_path)
+            print(f"\nBenchmark report written to {report_path}")
 
         has_failures = any(not result.success for result in results)
         if not results:

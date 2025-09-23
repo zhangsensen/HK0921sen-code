@@ -52,7 +52,7 @@ def test_app_settings_env_fallback(monkeypatch):
     parser = _build_parser()
     args = parser.parse_args(["--symbol", "0700.HK", "--phase", "phase1"])
     settings = AppSettings.from_cli_args(args)
-    assert settings.db_path == Path("/tmp/db.sqlite")
+    assert settings.db_path.resolve() == Path("/tmp/db.sqlite").resolve()
     assert settings.combiner.top_n == 12
     assert settings.combiner.max_factors == 4
     assert settings.combiner.min_sharpe == 0.9

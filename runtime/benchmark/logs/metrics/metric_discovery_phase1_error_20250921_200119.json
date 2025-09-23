@@ -1,0 +1,17 @@
+{
+  "name": "discovery_phase1_error",
+  "value": 1.0,
+  "type": "counter",
+  "category": "operation",
+  "timestamp": "2025-09-21T20:01:19.189948",
+  "tags": {
+    "symbol": "0700.HK",
+    "parallel_mode": "process",
+    "phase": "phase1"
+  },
+  "unit": null,
+  "session_id": null,
+  "metadata": {
+    "error": "No data root provided for raw data loading"
+  }
+}

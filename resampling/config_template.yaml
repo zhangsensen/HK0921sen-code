@@ -1,0 +1,39 @@
+# config/resampling_template.yaml
+# 重采样预处理工具配置模板
+
+# 数据根目录路径
+data_root: "./data"
+
+# 输出格式 (parquet, csv)
+output_format: "parquet"
+
+# 输出文件布局模板
+# 可用变量: {symbol}, {timeframe}
+output_layout: "raw_data/{timeframe}/{symbol}.parquet"
+
+# 目标时间周期列表
+target_timeframes:
+  - "10m"
+  - "15m"
+  - "30m"
+  - "1h"
+  - "2h"
+  - "4h"
+
+# 股票代码列表 (空列表表示处理所有可用股票)
+symbols:
+  - "0700.HK"
+  - "0005.HK"
+  - "0388.HK"
+
+# 并行工作进程数
+parallel_workers: 4
+
+# 数据块大小 (用于大数据集处理, 当前未在重采样逻辑中使用)
+chunk_size: 10000
+
+# 是否覆盖已存在的文件
+overwrite_existing: false
+
+# 是否生成元数据文件
+metadata_enabled: true

@@ -40,7 +40,7 @@ def _force_index(close: "pd.Series", volume: "pd.Series", period: int) -> "pd.Se
 
 
 def _volume_price_trend(close: "pd.Series", volume: "pd.Series") -> "pd.Series":
-    pct_change = close.pct_change().fillna(0)
+    pct_change = close.pct_change(fill_method=None).fillna(0)
     return (pct_change * volume).cumsum()
 
 

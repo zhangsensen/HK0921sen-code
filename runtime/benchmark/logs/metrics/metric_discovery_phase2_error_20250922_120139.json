@@ -1,0 +1,17 @@
+{
+  "name": "discovery_phase2_error",
+  "value": 1.0,
+  "type": "counter",
+  "category": "operation",
+  "timestamp": "2025-09-22T12:01:39.161818",
+  "tags": {
+    "symbol": "0700.HK",
+    "parallel_mode": "off",
+    "phase": "phase2"
+  },
+  "unit": null,
+  "session_id": null,
+  "metadata": {
+    "error": "Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue."
+  }
+}

@@ -15,6 +15,7 @@ from utils.monitoring.runtime import (
     PerformanceMonitor,
     get_performance_monitor,
     measure_operation_performance,
+    start_global_monitoring,
     stop_global_monitoring,
 )
 
@@ -95,7 +96,7 @@ def test_factor_alerts_trigger_and_resolve(tmp_path):
 def test_factor_metrics_cli_reports_grouped_values(tmp_path, capsys):
     stop_global_monitoring()
     config = MonitorConfig(
-        enabled=False,
+        enabled=True,
         log_dir=str(tmp_path / "logs"),
         database_path=str(tmp_path / "monitor.db"),
         factor_metrics=[
@@ -103,7 +104,9 @@ def test_factor_metrics_cli_reports_grouped_values(tmp_path, capsys):
             FactorMetricTemplate(name="max_drawdown"),
         ],
     )
-    monitor = get_performance_monitor(config)
+    # 启动全局监控，这样CLI脚本就能找到它
+    start_global_monitoring(config)
+    monitor = get_performance_monitor()
 
     monitor.record_factor_metrics("alpha", {"sharpe_ratio": 1.2, "max_drawdown": 0.1})
     monitor.record_factor_metrics("beta", {"sharpe_ratio": 0.9})

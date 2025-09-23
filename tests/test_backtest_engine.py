@@ -7,20 +7,35 @@ from phase1.backtest_engine import SimpleBacktestEngine
 
 
 def _build_sample_data():
-    index = pd.date_range("2024-01-01 09:30", periods=5, freq="1min")
-    close = pd.Series([100.0, 101.0, 101.5, 102.0, 102.5], index=index)
+    # Increase data points to meet minimum requirements (20+ points)
+    index = pd.date_range("2024-01-01 09:30", periods=25, freq="1min")
+    
+    # Generate realistic price data with some trend and volatility
+    np.random.seed(42)  # For reproducible tests
+    base_price = 100.0
+    price_changes = np.random.normal(0, 0.5, 25)
+    price_changes[0] = 0  # Start at base price
+    close_prices = base_price + np.cumsum(price_changes)
+    
+    close = pd.Series(close_prices, index=index)
     data = pd.DataFrame(
         {
-            "open": close,
-            "high": close + 0.2,
-            "low": close - 0.2,
+            "open": close.shift(1).fillna(close.iloc[0]),
+            "high": close + abs(np.random.normal(0, 0.3, 25)),
+            "low": close - abs(np.random.normal(0, 0.3, 25)),
             "close": close,
-            "volume": [1_000, 1_050, 980, 1_100, 1_040],
+            "volume": np.random.randint(900, 1200, 25),
         },
         index=index,
     )
-    # Enter on the second bar and flat again on the final bar.
-    signals = pd.Series([0, 1, 1, 1, 0], index=index, name="factor_signal")
+    
+    # Create more realistic trading signals
+    # Enter long when price is trending up, exit when trending down
+    signals = pd.Series(0, index=index, name="factor_signal")
+    signals.iloc[5:15] = 1  # Long position for middle period
+    signals.iloc[15:20] = -1  # Short position
+    # Rest are flat (0)
+    
     return data, signals
 
 

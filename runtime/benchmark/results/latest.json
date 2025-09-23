@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-09-22T11:51:13.486362Z",
+  "benchmark_start": "2025-09-22T19:50:23.815253",
+  "samples": 5,
+  "successes": 5,
+  "success_rate": 1.0,
+  "metrics": {
+    "avg_duration": 9.934075366798789,
+    "median_duration": 9.83197804199881,
+    "p95_duration": 10.157125733385328,
+    "avg_success_duration": 9.934075366798789,
+    "avg_cpu_time": 11.6657276,
+    "max_duration": 10.159332499984885,
+    "total_duration": 49.67037683399394,
+    "avg_peak_rss": 316.246875,
+    "max_peak_rss": 317.9375,
+    "avg_rss_delta": 42.86875,
+    "max_rss_delta": 219.65625,
+    "min_rss_delta": -10.671875
+  },
+  "config": {
+    "symbol": "0700.HK",
+    "phase": "both",
+    "parallel_mode": "off",
+    "db_path": "/Users/zhangshenshen/HK0920sen-code/benchmark_results/hk_factor_results.sqlite",
+    "async_batch_size": 8,
+    "monitoring_enabled": true
+  },
+  "runs": [
+    {
+      "index": 1,
+      "duration": 9.751179542014142,
+      "success": true,
+      "cpu_time": 11.559819000000001,
+      "start_memory_mb": 92.921875,
+      "end_memory_mb": 312.578125,
+      "error": null
+    },
+    {
+      "index": 2,
+      "duration": 9.83197804199881,
+      "success": true,
+      "cpu_time": 11.554283999999999,
+      "start_memory_mb": 312.578125,
+      "end_memory_mb": 316.390625,
+      "error": null
+    },
+    {
+      "index": 3,
+      "duration": 10.148298666987102,
+      "success": true,
+      "cpu_time": 11.743953999999999,
+      "start_memory_mb": 316.390625,
+      "end_memory_mb": 310.71875,
+      "error": null
+    },
+    {
+      "index": 4,
+      "duration": 9.779588083009003,
+      "success": true,
+      "cpu_time": 11.653176000000002,
+      "start_memory_mb": 310.71875,
+      "end_memory_mb": 317.9375,
+      "error": null
+    },
+    {
+      "index": 5,
+      "duration": 10.159332499984885,
+      "success": true,
+      "cpu_time": 11.817405,
+      "start_memory_mb": 317.9375,
+      "end_memory_mb": 307.265625,
+      "error": null
+    }
+  ]
+}

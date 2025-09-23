@@ -1,0 +1,31 @@
+name,value,type,category,timestamp,tags,unit,session_id,metadata
+discovery_phase1_duration,9.168859958648682,timer,operation,2025-09-22T11:33:50.341718,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,241.578125,gauge,operation,2025-09-22T11:33:50.344427,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T11:33:50.346412,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_error,1.0,counter,operation,2025-09-22T11:33:50.349169,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,"{'error': 'Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue.'}"
+discovery_phase2_duration,0.004026174545288086,timer,operation,2025-09-22T11:33:50.351109,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,-0.03125,gauge,operation,2025-09-22T11:33:50.352879,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase1_duration,9.14021110534668,timer,operation,2025-09-22T11:33:59.495846,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,-24.3125,gauge,operation,2025-09-22T11:33:59.498159,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T11:33:59.500214,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_error,1.0,counter,operation,2025-09-22T11:33:59.501728,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,"{'error': 'Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue.'}"
+discovery_phase2_duration,0.004318952560424805,timer,operation,2025-09-22T11:33:59.505174,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,-0.03125,gauge,operation,2025-09-22T11:33:59.506953,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase1_duration,8.99472713470459,timer,operation,2025-09-22T11:34:08.503954,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,45.171875,gauge,operation,2025-09-22T11:34:08.506731,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T11:34:08.508564,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_error,1.0,counter,operation,2025-09-22T11:34:08.509720,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,"{'error': 'Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue.'}"
+discovery_phase2_duration,0.0038251876831054688,timer,operation,2025-09-22T11:34:08.512987,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,-0.03125,gauge,operation,2025-09-22T11:34:08.514881,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase1_duration,9.026835918426514,timer,operation,2025-09-22T11:34:17.544302,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,20.640625,gauge,operation,2025-09-22T11:34:17.546957,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T11:34:17.548731,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_error,1.0,counter,operation,2025-09-22T11:34:17.549975,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,"{'error': 'Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue.'}"
+discovery_phase2_duration,0.003930807113647461,timer,operation,2025-09-22T11:34:17.553257,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,-0.015625,gauge,operation,2025-09-22T11:34:17.555117,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase1_duration,8.989700078964233,timer,operation,2025-09-22T11:34:26.547268,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,7.1875,gauge,operation,2025-09-22T11:34:26.549458,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T11:34:26.550801,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_error,1.0,counter,operation,2025-09-22T11:34:26.551725,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,"{'error': 'Requested 1330 combinations (top_n=20, max_factors=3) exceeds configured max_combinations=1000. Reduce top_n or max_factors, or increase the limit to continue.'}"
+discovery_phase2_duration,0.003551006317138672,timer,operation,2025-09-22T11:34:26.554776,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,-0.03125,gauge,operation,2025-09-22T11:34:26.556070,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,

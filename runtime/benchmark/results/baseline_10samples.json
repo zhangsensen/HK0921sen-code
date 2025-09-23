@@ -1,0 +1,121 @@
+{
+  "timestamp": "2025-09-22T04:37:42.730345Z",
+  "benchmark_start": "2025-09-22T12:36:14.187525",
+  "samples": 10,
+  "successes": 10,
+  "success_rate": 1.0,
+  "metrics": {
+    "avg_duration": 8.85429119589826,
+    "median_duration": 8.841216208500555,
+    "p95_duration": 8.977955029347504,
+    "avg_success_duration": 8.85429119589826,
+    "avg_cpu_time": 10.801151400000002,
+    "max_duration": 8.99504666699795,
+    "total_duration": 88.54291195898259,
+    "avg_peak_rss": 343.3875,
+    "max_peak_rss": 365.78125,
+    "avg_rss_delta": 25.309375,
+    "max_rss_delta": 232.71875,
+    "min_rss_delta": -54.984375
+  },
+  "config": {
+    "symbol": "0700.HK",
+    "phase": "both",
+    "parallel_mode": "off",
+    "db_path": "/Users/zhangshenshen/HK0920sen-code/benchmark_results/hk_factor_results.sqlite",
+    "async_batch_size": 8,
+    "monitoring_enabled": true
+  },
+  "runs": [
+    {
+      "index": 1,
+      "duration": 8.91621062500053,
+      "success": true,
+      "cpu_time": 10.867034,
+      "start_memory_mb": 91.09375,
+      "end_memory_mb": 323.8125,
+      "error": null
+    },
+    {
+      "index": 2,
+      "duration": 8.924146417004522,
+      "success": true,
+      "cpu_time": 10.926417999999998,
+      "start_memory_mb": 323.8125,
+      "end_memory_mb": 348.15625,
+      "error": null
+    },
+    {
+      "index": 3,
+      "duration": 8.99504666699795,
+      "success": true,
+      "cpu_time": 10.977757,
+      "start_memory_mb": 348.15625,
+      "end_memory_mb": 365.78125,
+      "error": null
+    },
+    {
+      "index": 4,
+      "duration": 8.858347959001549,
+      "success": true,
+      "cpu_time": 10.704577999999998,
+      "start_memory_mb": 365.78125,
+      "end_memory_mb": 310.796875,
+      "error": null
+    },
+    {
+      "index": 5,
+      "duration": 8.778772958001355,
+      "success": true,
+      "cpu_time": 10.707411999999998,
+      "start_memory_mb": 310.796875,
+      "end_memory_mb": 324.0625,
+      "error": null
+    },
+    {
+      "index": 6,
+      "duration": 8.79965399998764,
+      "success": true,
+      "cpu_time": 10.780270000000009,
+      "start_memory_mb": 324.0625,
+      "end_memory_mb": 339.484375,
+      "error": null
+    },
+    {
+      "index": 7,
+      "duration": 8.76857074999134,
+      "success": true,
+      "cpu_time": 10.750634000000005,
+      "start_memory_mb": 339.484375,
+      "end_memory_mb": 340.15625,
+      "error": null
+    },
+    {
+      "index": 8,
+      "duration": 8.824084457999561,
+      "success": true,
+      "cpu_time": 10.812263999999999,
+      "start_memory_mb": 340.15625,
+      "end_memory_mb": 340.484375,
+      "error": null
+    },
+    {
+      "index": 9,
+      "duration": 8.957065249996958,
+      "success": true,
+      "cpu_time": 10.804144000000008,
+      "start_memory_mb": 340.484375,
+      "end_memory_mb": 341.96875,
+      "error": null
+    },
+    {
+      "index": 10,
+      "duration": 8.721012875001179,
+      "success": true,
+      "cpu_time": 10.681003000000004,
+      "start_memory_mb": 341.96875,
+      "end_memory_mb": 344.1875,
+      "error": null
+    }
+  ]
+}

@@ -49,7 +49,7 @@ def _trix(close: "pd.Series", period: int) -> "pd.Series":
     ema1 = ema(close, period)
     ema2 = ema(ema1, period)
     ema3 = ema(ema2, period)
-    return ema3.pct_change() * 100
+    return ema3.pct_change(fill_method=None) * 100
 
 
 def _aroon(series: "pd.Series", period: int, mode: str) -> "pd.Series":

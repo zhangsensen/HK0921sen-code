@@ -1,0 +1,31 @@
+name,value,type,category,timestamp,tags,unit,session_id,metadata
+discovery_phase1_duration,8.9337739944458,timer,operation,2025-09-22T19:50:32.750825,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,186.84375,gauge,operation,2025-09-22T19:50:32.752103,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T19:50:32.753195,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_duration,0.8057467937469482,timer,operation,2025-09-22T19:50:33.559127,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,33.359375,gauge,operation,2025-09-22T19:50:33.560128,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase2_result_count,1330.0,gauge,operation,2025-09-22T19:50:33.561133,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,{'executed': True}
+discovery_phase1_duration,8.947665929794312,timer,operation,2025-09-22T19:50:42.514466,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,-19.796875,gauge,operation,2025-09-22T19:50:42.515659,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T19:50:42.516888,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_duration,0.8737058639526367,timer,operation,2025-09-22T19:50:43.390766,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,24.21875,gauge,operation,2025-09-22T19:50:43.391945,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase2_result_count,1330.0,gauge,operation,2025-09-22T19:50:43.392912,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,{'executed': True}
+discovery_phase1_duration,9.111623048782349,timer,operation,2025-09-22T19:50:52.510545,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,-14.78125,gauge,operation,2025-09-22T19:50:52.511839,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T19:50:52.512993,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_duration,1.0261712074279785,timer,operation,2025-09-22T19:50:53.539356,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,9.703125,gauge,operation,2025-09-22T19:50:53.540447,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase2_result_count,1330.0,gauge,operation,2025-09-22T19:50:53.541389,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,{'executed': True}
+discovery_phase1_duration,8.93224287033081,timer,operation,2025-09-22T19:51:02.479673,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,-7.984375,gauge,operation,2025-09-22T19:51:02.480813,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T19:51:02.482132,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_duration,0.8357760906219482,timer,operation,2025-09-22T19:51:03.318071,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,15.828125,gauge,operation,2025-09-22T19:51:03.319131,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase2_result_count,1330.0,gauge,operation,2025-09-22T19:51:03.320164,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,{'executed': True}
+discovery_phase1_duration,9.31365704536438,timer,operation,2025-09-22T19:51:12.640752,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,-37.4375,gauge,operation,2025-09-22T19:51:12.643118,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T19:51:12.644168,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_duration,0.8332061767578125,timer,operation,2025-09-22T19:51:13.477547,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,27.34375,gauge,operation,2025-09-22T19:51:13.478791,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase2_result_count,1330.0,gauge,operation,2025-09-22T19:51:13.479685,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,{'executed': True}

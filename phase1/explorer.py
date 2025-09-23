@@ -106,20 +106,78 @@ class SingleFactorExplorer:
     def explore_single_factor(self, timeframe: str, factor, data: Optional["pd.DataFrame"] = None) -> Dict[str, object]:
         if data is None:
             data = self.data_loader.load(self.symbol, timeframe)
+
+        # Validate data sufficiency before processing
+        if len(data) < 20:
+            return {
+                "symbol": self.symbol,
+                "timeframe": timeframe,
+                "factor": factor.name,
+                "sharpe_ratio": 0.0,
+                "stability": 0.0,
+                "trades_count": 0,
+                "win_rate": 0.0,
+                "profit_factor": 0.0,
+                "max_drawdown": 0.0,
+                "information_coefficient": 0.0,
+                "returns": pd.Series([], dtype=float),
+                "equity_curve": pd.Series([], dtype=float),
+                "exploration_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                "error": "Insufficient data for backtest",
+            }
+
         signals = factor.generate_signals(self.symbol, timeframe, data)
-        backtest = self.backtest_engine.backtest_factor(data, signals)
-        return {
-            "symbol": self.symbol,
-            "timeframe": timeframe,
-            "factor": factor.name,
-            "sharpe_ratio": backtest["sharpe_ratio"],
-            "stability": backtest["stability"],
-            "trades_count": backtest["trades_count"],
-            "win_rate": backtest["win_rate"],
-            "profit_factor": backtest["profit_factor"],
-            "max_drawdown": backtest["max_drawdown"],
-            "information_coefficient": backtest["information_coefficient"],
-            "returns": backtest["returns"],
-            "equity_curve": backtest["equity_curve"],
-            "exploration_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
-        }
+
+        # Check if signals are all zeros
+        if (signals == 0).all():
+            return {
+                "symbol": self.symbol,
+                "timeframe": timeframe,
+                "factor": factor.name,
+                "sharpe_ratio": 0.0,
+                "stability": 0.0,
+                "trades_count": 0,
+                "win_rate": 0.0,
+                "profit_factor": 0.0,
+                "max_drawdown": 0.0,
+                "information_coefficient": 0.0,
+                "returns": pd.Series([], dtype=float),
+                "equity_curve": pd.Series([], dtype=float),
+                "exploration_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                "error": "No trading signals generated",
+            }
+
+        try:
+            backtest = self.backtest_engine.backtest_factor(data, signals)
+            return {
+                "symbol": self.symbol,
+                "timeframe": timeframe,
+                "factor": factor.name,
+                "sharpe_ratio": backtest["sharpe_ratio"],
+                "stability": backtest["stability"],
+                "trades_count": backtest["trades_count"],
+                "win_rate": backtest["win_rate"],
+                "profit_factor": backtest["profit_factor"],
+                "max_drawdown": backtest["max_drawdown"],
+                "information_coefficient": backtest["information_coefficient"],
+                "returns": backtest["returns"],
+                "equity_curve": backtest["equity_curve"],
+                "exploration_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        except Exception as e:
+            return {
+                "symbol": self.symbol,
+                "timeframe": timeframe,
+                "factor": factor.name,
+                "sharpe_ratio": 0.0,
+                "stability": 0.0,
+                "trades_count": 0,
+                "win_rate": 0.0,
+                "profit_factor": 0.0,
+                "max_drawdown": 0.0,
+                "information_coefficient": 0.0,
+                "returns": pd.Series([], dtype=float),
+                "equity_curve": pd.Series([], dtype=float),
+                "exploration_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                "error": f"Backtest failed: {str(e)}",
+            }

@@ -57,4 +57,4 @@ def zscore(series: "pd.Series", window: int) -> "pd.Series":
 
 
 def rate_of_change(series: "pd.Series", period: int) -> "pd.Series":
-    return ensure_series(series).pct_change(periods=period)
+    return ensure_series(series).pct_change(periods=period, fill_method=None)

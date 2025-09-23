@@ -8,8 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, List, Mapping, Protocol
 
+from utils.data_quality import DataQualityValidator
 
-DEFAULT_DB_PATH = Path(".local_results/hk_factor_results.sqlite")
+
+REPO_ROOT = Path(__file__).resolve().parent
+DEFAULT_DB_PATH = (REPO_ROOT / "benchmark_results" / "hk_factor_results.sqlite").resolve()
 
 
 class ConnectionProvider(Protocol):
@@ -40,6 +43,12 @@ class SQLiteClient(ConnectionProvider):
     def connect(self) -> Iterator[sqlite3.Connection]:
         connection = sqlite3.connect(self.path)
         try:
+            connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute("PRAGMA synchronous=NORMAL")
+            connection.execute("PRAGMA cache_size=10000")
+        except sqlite3.DatabaseError:  # pragma: no cover - defensive guard
+            pass
+        try:
             yield connection
         finally:
             connection.close()
@@ -65,6 +74,7 @@ class StrategyResult:
     symbol: str
     strategy_name: str
     factor_combination: List[str]
+    timeframes: List[str]
     sharpe_ratio: float
     stability: float
     trades_count: int
@@ -107,6 +117,7 @@ class SchemaManager:
                     symbol TEXT NOT NULL,
                     strategy_name TEXT NOT NULL,
                     factor_combination TEXT NOT NULL,
+                    timeframes TEXT NOT NULL,
                     sharpe_ratio REAL NOT NULL,
                     stability REAL NOT NULL,
                     trades_count INTEGER NOT NULL,
@@ -131,6 +142,12 @@ class SchemaManager:
                 "combination_strategies",
                 "average_information_coefficient",
                 "REAL NOT NULL DEFAULT 0",
+            )
+            self._ensure_column(
+                cursor,
+                "combination_strategies",
+                "timeframes",
+                "TEXT NOT NULL DEFAULT '[]'",
             )
             self._ensure_index(cursor, "idx_factor_symbol_timeframe", "factor_exploration_results", ("symbol", "timeframe"))
             self._ensure_index(cursor, "idx_strategy_symbol", "combination_strategies", ("symbol",))
@@ -160,6 +177,19 @@ class FactorRepository:
         self._client = client
 
     def save_many(self, results: Iterable[Mapping[str, object]]) -> None:
+        # Validate and clean results before saving
+        validated_results = []
+        for result in results:
+            # Convert to dict for validation
+            result_dict = dict(result)
+            validated_result = DataQualityValidator.validate_factor_result(result_dict)
+            validated_results.append(validated_result)
+
+            # Log validation warnings
+            violations = validated_result.get('_validation_violations', [])
+            if violations:
+                print(f"Warning: Data quality violations for {result_dict.get('symbol', 'unknown')}_{result_dict.get('timeframe', 'unknown')}_{result_dict.get('factor', 'unknown')}: {violations}")
+
         with self._client.connect() as conn:
             rows = [
                 (
@@ -175,7 +205,7 @@ class FactorRepository:
                     r.get("information_coefficient", 0.0),
                     r["exploration_date"],
                 )
-                for r in results
+                for r in validated_results
             ]
             conn.executemany(
                 """
@@ -214,12 +244,26 @@ class StrategyRepository:
         self._client = client
 
     def save_many(self, strategies: Iterable[Mapping[str, object]]) -> None:
+        # Validate and clean strategies before saving
+        validated_strategies = []
+        for strategy in strategies:
+            # Convert to dict for validation
+            strategy_dict = dict(strategy)
+            validated_strategy = DataQualityValidator.validate_combination_strategy(strategy_dict)
+            validated_strategies.append(validated_strategy)
+
+            # Log validation warnings
+            violations = validated_strategy.get('_validation_violations', [])
+            if violations:
+                print(f"Warning: Data quality violations for strategy {strategy_dict.get('strategy_name', 'unknown')}: {violations}")
+
         with self._client.connect() as conn:
             rows = [
                 (
                     s["symbol"],
                     s["strategy_name"],
                     json.dumps(s["factors"]),
+                    json.dumps(s.get("timeframes", [])),
                     s["sharpe_ratio"],
                     s["stability"],
                     s["trades_count"],
@@ -229,15 +273,15 @@ class StrategyRepository:
                     s.get("average_information_coefficient", 0.0),
                     s["creation_date"],
                 )
-                for s in strategies
+                for s in validated_strategies
             ]
             conn.executemany(
                 """
                 INSERT OR REPLACE INTO combination_strategies (
-                    symbol, strategy_name, factor_combination, sharpe_ratio,
+                    symbol, strategy_name, factor_combination, timeframes, sharpe_ratio,
                     stability, trades_count, win_rate, profit_factor, max_drawdown,
                     average_information_coefficient, creation_date
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 rows,
             )
@@ -248,7 +292,7 @@ class StrategyRepository:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT symbol, strategy_name, factor_combination, sharpe_ratio, stability,
+                SELECT symbol, strategy_name, factor_combination, timeframes, sharpe_ratio, stability,
                        trades_count, win_rate, profit_factor, max_drawdown,
                        average_information_coefficient, creation_date
                 FROM combination_strategies
@@ -259,7 +303,13 @@ class StrategyRepository:
             )
             rows = cursor.fetchall()
         return [
-            StrategyResult(row[0], row[1], json.loads(row[2]), *row[3:])
+            StrategyResult(
+                row[0],
+                row[1],
+                json.loads(row[2]),
+                json.loads(row[3]),
+                *row[4:],
+            )
             for row in rows
         ]
 
@@ -323,4 +373,3 @@ class DatabaseManager:
 
     def load_combination_strategies(self, symbol: str) -> List[StrategyResult]:
         return self.strategies.load_by_symbol(symbol)
-

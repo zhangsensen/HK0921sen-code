@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-09-22T19:50:54.878119",
+  "cpu_percent": 34.3,
+  "memory_percent": 81.9,
+  "memory_used_mb": 7277.34375,
+  "memory_total_mb": 24576.0,
+  "disk_usage_percent": 18.8,
+  "network_sent_mb": 4090.119140625,
+  "network_recv_mb": 4042.115234375,
+  "thread_count": 23,
+  "process_count": 536
+}

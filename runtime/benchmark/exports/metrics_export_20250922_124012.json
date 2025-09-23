@@ -1,0 +1,492 @@
+[
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.885716",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 7,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 6.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.885806",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 7,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.886362",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 8,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 3.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.886394",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 8,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.886630",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 9,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 2.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.886670",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 9,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.886892",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 10,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 1.5,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.886955",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 10,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.887283",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 11,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 1.2,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.887332",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 11,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.887536",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 12,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.887581",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 12,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.887798",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 13,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 0.8571428571428571,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.887836",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 13,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888010",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 14,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 0.75,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888060",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 14,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888258",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 15,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 0.6666666666666666,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888297",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 15,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888504",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 16,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 0.6,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888531",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 16,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.cache_hit_rate",
+    "value": 1.0,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888708",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 17,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "loader.disk_cache_rate",
+    "value": 0.5454545454545454,
+    "type": "gauge",
+    "category": "data_loading",
+    "timestamp": "2025-09-22T12:40:03.888729",
+    "tags": {
+      "symbol": "0700.HK",
+      "mode": "process"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "source": "preloaded",
+      "loads": 17,
+      "disk_writes": 11
+    }
+  },
+  {
+    "name": "discovery_phase1_duration",
+    "value": 8.28018593788147,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:40:12.058294",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "process",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 246.421875,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:40:12.059656",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "process",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_result_count",
+    "value": 792.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:40:12.060899",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "process",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  },
+  {
+    "name": "discovery_phase2_duration",
+    "value": 0.054483890533447266,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:40:12.115529",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "process",
+      "phase": "phase2"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_memory_delta",
+    "value": 0.34375,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:40:12.116641",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "process",
+      "phase": "phase2"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_result_count",
+    "value": 105.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:40:12.117877",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "process",
+      "phase": "phase2"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  }
+]

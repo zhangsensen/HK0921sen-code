@@ -1,12 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git remote set-url:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git pull:*)",
-      "Bash(git checkout:*)"
+      "Bash(git fetch:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(python3:*)",
+      "Bash(tree:*)",
+      "mcp__ide__executeCode",
+      "Bash(python:*)",
+      "Bash(chmod:*)",
+      "Read(//Users/zhangshenshen/**)",
+      "Bash(rm:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

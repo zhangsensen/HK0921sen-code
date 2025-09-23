@@ -1,0 +1,59 @@
+# 港股因子发现系统配置文件
+# 支持环境变量替换，格式：${ENV_VAR_NAME} 或 ${ENV_VAR_NAME:-default_value}
+
+# 数据配置
+data:
+  # 数据根目录路径，支持相对路径和绝对路径
+  root: "./data"
+  # 缓存TTL（秒）
+  cache_ttl: 300
+  # 异步批处理大小
+  async_batch_size: 8
+
+# 数据库配置
+database:
+  # SQLite数据库路径
+  path: "./benchmark_results/hk_factor_results.sqlite"
+
+# 日志配置
+logging:
+  # 日志级别：DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+
+# 并行处理配置
+parallel:
+  # 并行模式：off, process
+  mode: "off"
+  # 最大工作进程数（null表示自动检测）
+  max_workers: null
+  # 内存限制（MB），null表示无限制
+  memory_limit_mb: null
+
+# 因子组合器配置
+combiner:
+  # 纳入评估的顶尖单因子数量
+  top_n: 20
+  # 每个策略允许的最大因子个数
+  max_factors: 3
+  # 最大组合数量（null表示无限制）
+  max_combinations: 2000
+  # 最低夏普比率
+  min_sharpe: 0.0
+  # 最小信息系数
+  min_information_coefficient: 0.0
+
+# 性能监控配置
+monitoring:
+  # 是否启用监控
+  enabled: false
+  # 监控日志目录
+  log_dir: "logs/performance"
+  # 监控数据库路径
+  database_path: "monitoring/performance.db"
+
+# 应用配置
+app:
+  # 是否重置数据库
+  reset: false
+  # 默认阶段：phase1, phase2, both
+  default_phase: "both"

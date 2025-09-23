@@ -65,6 +65,7 @@ def _make_strategy_rows(timestamp: str) -> list[Mapping[str, object]]:
             "symbol": "STRAT_A",
             "strategy_name": "strategy_a",
             "factors": ["factor_a", "factor_b"],
+            "timeframes": ["1m", "5m"],
             "sharpe_ratio": 1.15,
             "stability": 0.72,
             "trades_count": 8,
@@ -78,6 +79,7 @@ def _make_strategy_rows(timestamp: str) -> list[Mapping[str, object]]:
             "symbol": "STRAT_B",
             "strategy_name": "strategy_b",
             "factors": ["factor_c", "factor_d"],
+            "timeframes": ["15m", "1h"],
             "sharpe_ratio": 1.18,
             "stability": 0.74,
             "trades_count": 9,
@@ -228,5 +230,6 @@ def test_ensure_schema_idempotent(tmp_path) -> None:
     assert "idx_factor_symbol_timeframe" in factor_indexes_after
     assert strategy_columns_after == initial_strategy_columns
     assert "average_information_coefficient" in strategy_columns_after
+    assert "timeframes" in strategy_columns_after
     assert strategy_indexes_after == initial_strategy_indexes
     assert "idx_strategy_symbol" in strategy_indexes_after

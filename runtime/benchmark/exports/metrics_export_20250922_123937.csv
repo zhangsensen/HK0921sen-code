@@ -1,0 +1,7 @@
+name,value,type,category,timestamp,tags,unit,session_id,metadata
+discovery_phase1_duration,8.970368146896362,timer,operation,2025-09-22T12:39:37.125651,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",seconds,,
+discovery_phase1_memory_delta,244.046875,gauge,operation,2025-09-22T12:39:37.126689,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",MB,,
+discovery_phase1_result_count,792.0,gauge,operation,2025-09-22T12:39:37.127503,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase1'}",,,{'executed': True}
+discovery_phase2_duration,0.06128191947937012,timer,operation,2025-09-22T12:39:37.188911,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",seconds,,
+discovery_phase2_memory_delta,0.046875,gauge,operation,2025-09-22T12:39:37.189710,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",MB,,
+discovery_phase2_result_count,105.0,gauge,operation,2025-09-22T12:39:37.190532,"{'symbol': '0700.HK', 'parallel_mode': 'off', 'phase': 'phase2'}",,,{'executed': True}

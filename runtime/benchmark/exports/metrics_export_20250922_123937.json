@@ -1,0 +1,96 @@
+[
+  {
+    "name": "discovery_phase1_duration",
+    "value": 8.970368146896362,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:39:37.125651",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_memory_delta",
+    "value": 244.046875,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:39:37.126689",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase1_result_count",
+    "value": 792.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:39:37.127503",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase1"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  },
+  {
+    "name": "discovery_phase2_duration",
+    "value": 0.06128191947937012,
+    "type": "timer",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:39:37.188911",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "seconds",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_memory_delta",
+    "value": 0.046875,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:39:37.189710",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": "MB",
+    "session_id": null,
+    "metadata": null
+  },
+  {
+    "name": "discovery_phase2_result_count",
+    "value": 105.0,
+    "type": "gauge",
+    "category": "operation",
+    "timestamp": "2025-09-22T12:39:37.190532",
+    "tags": {
+      "symbol": "0700.HK",
+      "parallel_mode": "off",
+      "phase": "phase2"
+    },
+    "unit": null,
+    "session_id": null,
+    "metadata": {
+      "executed": true
+    }
+  }
+]
